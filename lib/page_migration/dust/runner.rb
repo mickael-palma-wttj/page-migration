@@ -6,6 +6,8 @@ module PageMigration
   module Dust
     # Handles the execution of a Dust Agent run
     class Runner
+      include Loggable
+
       def initialize(client, agent_id, debug: false)
         @client = client
         @agent_id = agent_id
@@ -78,10 +80,6 @@ module PageMigration
         contents = message[:contents] || []
         text_content = contents.find { |c| c.dig(:content, :type) == "text" }
         text_content&.dig(:content, :value)
-      end
-
-      def debug_log(message)
-        puts "[DEBUG] #{message}" if @debug
       end
     end
   end

@@ -7,6 +7,7 @@ module PageMigration
   module Commands
     # Command to generate assets using Dust API based on prompts
     class Migrate
+      include Loggable
       EXPORT_DIR = "tmp/export"
       ANALYSIS_DIR = "tmp/analysis"
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
@@ -139,10 +140,6 @@ module PageMigration
         return path if File.exist?(path)
 
         Dir.glob(File.join(EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
-      end
-
-      def debug_log(message)
-        puts "[DEBUG] #{message}" if @debug
       end
 
       def strip_markdown_fences(text)

@@ -8,6 +8,7 @@ module PageMigration
   module Services
     # Processes a single prompt file and generates the output using Dust API
     class PromptProcessor
+      include Loggable
       PROMPTS_DIR = File.expand_path("../prompts", __dir__)
       MIGRATION_PROMPTS_DIR = File.join(PROMPTS_DIR, "migration")
 
@@ -175,10 +176,6 @@ module PageMigration
           "content" => content.strip,
           "output_format" => {"type" => "markdown"}
         }
-      end
-
-      def debug_log(message)
-        puts "[DEBUG] #{message}" if @debug
       end
     end
   end
