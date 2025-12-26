@@ -22,3 +22,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Test coverage
+/coverage/
+
+# RSpec persistence file
+/spec/examples.txt

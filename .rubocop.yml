@@ -1,0 +1,15 @@
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  TargetRubyVersion: 3.4
+
+# Spec files often have long blocks for describe/context
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+
+# RSpec uses expect { }.to which triggers this
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"
