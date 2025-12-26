@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "yaml"
 require "fileutils"
 
 module PageMigration
@@ -125,11 +126,32 @@ module PageMigration
 
       def parse_prompt_file(path)
         content = File.read(path)
-        # Remove markdown fences if present
-        content = content.gsub(/^```prompt\n/, "").gsub(/\n```$/, "")
-        JSON.parse(content)
+
+        # Check for YAML frontmatter (starts with ---)
+        if content.start_with?("---")
+          parse_yaml_frontmatter(content, path)
+        else
+          # Remove markdown fences if present and parse as JSON
+          content = content.gsub(/^```prompt\n/, "").gsub(/\n```$/, "")
+          JSON.parse(content)
+        end
       rescue JSON::ParserError => e
         raise "Failed to parse JSON in #{path}: #{e.message}"
+      end
+
+      def parse_yaml_frontmatter(content, path)
+        # Split on frontmatter delimiters
+        parts = content.split(/^---\s*$/, 3)
+        raise "Invalid YAML frontmatter in #{path}" if parts.length < 3
+
+        frontmatter = YAML.safe_load(parts[1])
+        body = parts[2].strip
+
+        # Merge frontmatter with body as content
+        frontmatter["content"] = body
+        frontmatter
+      rescue Psych::SyntaxError => e
+        raise "Failed to parse YAML frontmatter in #{path}: #{e.message}"
       end
 
       def debug_log(message)
