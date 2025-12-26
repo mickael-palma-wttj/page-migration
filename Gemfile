@@ -8,5 +8,11 @@ gem "ruby-progressbar"
 gem "zeitwerk"
 
 group :development do
-  gem "rubocop", require: false
+  gem "standard", require: false
+end
+
+group :test do
+  gem "rspec"
+  gem "simplecov", require: false
+  gem "webmock"
 end
