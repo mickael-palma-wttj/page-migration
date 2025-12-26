@@ -74,11 +74,26 @@ lib/
     database.rb              # Database connection helper
     commands/                # CLI command implementations
     dust/                    # Dust API client and runner
+    generators/              # Content export generators
     queries/                 # SQL query definitions
+    renderers/               # Shared rendering modules
     services/                # Business logic services
+    support/                 # Utility classes and helpers
 ```
 
-See README files in each subfolder for detailed documentation.
+### Module Overview
+
+| Directory | Purpose |
+|-----------|---------|
+| `commands/` | CLI command classes (extract, export, migrate, etc.) |
+| `dust/` | Dust AI API client and conversation runner |
+| `generators/` | Content generators (Markdown, text, tree exports) |
+| `queries/` | SQL queries for organization and page tree data |
+| `renderers/` | Shared rendering logic (content, tree, records) |
+| `services/` | Business logic (prompt processing, AI workflows) |
+| `support/` | Utilities (file discovery, JSON loading) |
+
+See README files in each subdirectory for detailed documentation.
 
 ## Output Locations
 
