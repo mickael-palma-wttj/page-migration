@@ -1,0 +1,151 @@
+# frozen_string_literal: true
+
+require 'json'
+require 'fileutils'
+require 'ruby-progressbar'
+
+module PageMigration
+  module Commands
+    # Command to generate assets using Dust API based on prompts
+    class Migrate
+      EXPORT_DIR = 'tmp/export'
+
+      def initialize(org_ref, language: 'fr')
+        @org_ref = org_ref
+        @language = language
+
+        @client = PageMigration::Dust::Client.new(
+          ENV.fetch('DUST_WORKSPACE_ID'),
+          ENV.fetch('DUST_API_KEY')
+        )
+
+        @runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'))
+        @processor = PageMigration::Services::PromptProcessor.new(@client, {}, @runner, language: @language)
+      end
+
+      def call
+        org_data = load_org_data
+        txt_file = ensure_text_exported(org_data)
+
+        puts "📖 Using content from: #{txt_file}"
+        content_summary = File.read(txt_file)
+
+        output_root = build_output_root(org_data)
+        run_migration_workflow(content_summary, output_root)
+      end
+
+      private
+
+      def load_org_data
+        input_file = find_input_file
+        data = JsonLoader.load(input_file).first
+        raise PageMigration::Error, 'No organization data found' unless data
+
+        data
+      end
+
+      def ensure_text_exported(org_data)
+        txt_file = find_exported_txt(org_data)
+        return txt_file if txt_file && File.exist?(txt_file)
+
+        puts '⚠️ Exported Text not found. Running extract --format text first...'
+        Extract.new(@org_ref, format: 'text', language: @language).call
+        find_exported_txt(org_data) || raise(PageMigration::Error, 'Text extraction failed')
+      end
+
+      def find_exported_txt(org_data)
+        org_name = sanitize_filename(org_data['name'])
+        # Check new location in tmp folder
+        path = "tmp/query_result/#{@org_ref}_#{org_name}/contenu_#{@language}.txt"
+        return path if File.exist?(path)
+
+        # Fallback to glob in tmp folder
+        Dir.glob("tmp/query_result/#{@org_ref}_*/contenu_#{@language}.txt").first
+      end
+
+      def ensure_markdown_exported(org_data)
+        md_file = find_exported_md(org_data)
+        return md_file if md_file && File.exist?(md_file)
+
+        puts '⚠️ Exported Markdown not found. Running export first...'
+        Export.new(@org_ref, languages: [@language]).call
+        find_exported_md(org_data) || raise(PageMigration::Error, 'Export failed')
+      end
+
+      def build_output_root(org_data)
+        org_name = sanitize_filename(org_data['name'])
+        root = "tmp/generated_assets/#{@org_ref}_#{org_name}"
+        FileUtils.mkdir_p(root)
+        root
+      end
+
+      def run_migration_workflow(summary, output_root)
+        puts "\n🔍 Running brand analysis..."
+        analysis_result = run_analysis(summary, output_root)
+
+        prompts = Dir.glob('prompts/migration/**/*.prompt.md').sort
+        prompts.reject! { |p| p.include?('file_analysis.prompt.md') }
+
+        puts "\nProcessing #{prompts.length} prompts in parallel..."
+        progress = ProgressBar.create(
+          title: 'Migration',
+          total: prompts.length,
+          format: '%t: %c/%C |%B| %p%% %e'
+        )
+
+        queue = Queue.new
+        prompts.each { |p| queue << p }
+
+        # Use 5 threads for parallel processing
+        workers = 5.times.map do
+          Thread.new do
+            while !queue.empty? && (path = begin
+              queue.pop(true)
+            rescue StandardError
+              nil
+            end)
+              @processor.process(path, summary, output_root, additional_instructions: analysis_result)
+              progress.increment
+            end
+          end
+        end
+        workers.each(&:join)
+
+        puts "\n✅ Migration complete! Assets generated in #{output_root}/"
+      end
+
+      def run_analysis(summary, output_root)
+        path = 'prompts/migration/file_analysis.prompt.md'
+        return nil unless File.exist?(path)
+
+        @processor.process(path, summary, output_root)
+      end
+
+      def find_exported_md(org_data)
+        org_name = sanitize_filename(org_data['name'])
+        path = File.join(EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
+        return path if File.exist?(path)
+
+        Dir.glob(File.join(EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
+      end
+
+      def sanitize_filename(name)
+        name.downcase.gsub(/[^a-z0-9]+/, '_').gsub(/^_|_$/, '')
+      end
+
+      def find_input_file
+        # Check for the default extract location first
+        path = Dir.glob("tmp/query_result/#{@org_ref}_*/query.json").first
+        return path if path && File.exist?(path)
+
+        # Check for the legacy/alternative location
+        path = "tmp/#{@org_ref}_organization.json"
+        return path if File.exist?(path)
+
+        puts "⚠️ Organization data not found for #{@org_ref}. Running extract first..."
+        extracted_path = Extract.new(@org_ref).call
+        extracted_path || path
+      end
+    end
+  end
+end

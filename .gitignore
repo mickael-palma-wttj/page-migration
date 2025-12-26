@@ -1,0 +1,24 @@
+# Dependencies
+/vendor/bundle
+/.bundle
+
+# Environment variables
+.env
+.env*.local
+
+# Temporary files and generated assets
+/tmp/*
+!/tmp/.keep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.swp
+*.swo
+.ruby-lsp/
+
+# Logs
+*.log
