@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe PageMigration::Dust::Client do
+  subject(:client) { described_class.new(workspace_id, api_key) }
+
   let(:workspace_id) { "test_workspace" }
   let(:api_key) { "test_api_key" }
-  let(:client) { described_class.new(workspace_id, api_key) }
 
   describe "#initialize" do
     it "sets workspace_id" do

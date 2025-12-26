@@ -8,7 +8,7 @@ RSpec.describe PageMigration::Services::PromptRunner do
 
   describe "#run" do
     context "in debug mode (sequential)" do
-      let(:runner) { described_class.new(processor, debug: true) }
+      subject(:runner) { described_class.new(processor, debug: true) }
 
       it "processes prompts sequentially" do
         expect(processor).to receive(:process).with(prompts[0], summary, output_root, additional_instructions: nil).ordered
@@ -27,7 +27,8 @@ RSpec.describe PageMigration::Services::PromptRunner do
     end
 
     context "in parallel mode" do
-      let(:runner) { described_class.new(processor, debug: false) }
+      subject(:runner) { described_class.new(processor, debug: false) }
+
       let(:progress_bar) { instance_double(ProgressBar::Base, increment: nil) }
 
       before do

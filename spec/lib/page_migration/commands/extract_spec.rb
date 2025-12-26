@@ -24,7 +24,7 @@ RSpec.describe PageMigration::Commands::Extract do
 
   describe "#call" do
     context "with json format (default)" do
-      let(:command) { described_class.new(org_ref) }
+      subject(:command) { described_class.new(org_ref) }
 
       it "queries the database" do
         expect(PageMigration::Queries::OrganizationQuery).to receive(:new).with(org_ref)
@@ -44,7 +44,7 @@ RSpec.describe PageMigration::Commands::Extract do
     end
 
     context "with text format" do
-      let(:command) { described_class.new(org_ref, format: "text") }
+      subject(:command) { described_class.new(org_ref, format: "text") }
       let(:text_generator) { instance_double(PageMigration::Generators::TextContentGenerator, generate: "Content") }
 
       before do
@@ -64,7 +64,7 @@ RSpec.describe PageMigration::Commands::Extract do
     end
 
     context "with custom output path" do
-      let(:command) { described_class.new(org_ref, output: "custom/path.json") }
+      subject(:command) { described_class.new(org_ref, output: "custom/path.json") }
 
       it "uses the custom output path" do
         expect(File).to receive(:write).with("custom/path.json", anything)
@@ -73,7 +73,7 @@ RSpec.describe PageMigration::Commands::Extract do
     end
 
     context "with language option" do
-      let(:command) { described_class.new(org_ref, format: "text", language: "en") }
+      subject(:command) { described_class.new(org_ref, format: "text", language: "en") }
       let(:text_generator) { instance_double(PageMigration::Generators::TextContentGenerator, generate: "Content") }
 
       before do

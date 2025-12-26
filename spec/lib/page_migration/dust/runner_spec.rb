@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe PageMigration::Dust::Runner do
+  subject(:runner) { described_class.new(client, agent_id) }
+
   let(:client) { instance_double(PageMigration::Dust::Client, workspace_id: "test_ws") }
   let(:agent_id) { "agent_123" }
-  let(:runner) { described_class.new(client, agent_id) }
 
   describe "#run" do
     let(:conv_response) { {conversation: {sId: "conv_1"}} }

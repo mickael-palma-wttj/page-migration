@@ -19,7 +19,7 @@ RSpec.describe PageMigration::Commands::Convert do
 
   describe "#call" do
     context "with explicit input file" do
-      let(:command) { described_class.new(input: "input.json") }
+      subject(:command) { described_class.new(input: "input.json") }
 
       it "loads JSON from input file" do
         expect(PageMigration::Support::JsonLoader).to receive(:load).with("input.json")
@@ -38,7 +38,7 @@ RSpec.describe PageMigration::Commands::Convert do
     end
 
     context "with org_ref" do
-      let(:command) { described_class.new("Pg4eV6k") }
+      subject(:command) { described_class.new("Pg4eV6k") }
 
       before do
         allow(PageMigration::Support::FileDiscovery).to receive(:find_query_json!)
@@ -52,7 +52,7 @@ RSpec.describe PageMigration::Commands::Convert do
     end
 
     context "without input or org_ref" do
-      let(:command) { described_class.new }
+      subject(:command) { described_class.new }
 
       before do
         allow(PageMigration::Support::FileDiscovery).to receive(:find_latest_query_json)
@@ -77,7 +77,7 @@ RSpec.describe PageMigration::Commands::Convert do
     end
 
     context "with custom output_dir" do
-      let(:command) { described_class.new(input: "input.json", output_dir: "custom/output") }
+      subject(:command) { described_class.new(input: "input.json", output_dir: "custom/output") }
 
       it "writes to custom directory" do
         expect(File).to receive(:write).with(%r{^custom/output/}, anything)

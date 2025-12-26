@@ -38,7 +38,7 @@ RSpec.describe PageMigration::Commands::Export do
 
   describe "#call" do
     context "default export (single file per language)" do
-      let(:command) { described_class.new(org_ref) }
+      subject(:command) { described_class.new(org_ref) }
 
       it "queries organization and tree data" do
         expect(PageMigration::Queries::OrganizationQuery).to receive(:new).with(org_ref)
@@ -64,7 +64,7 @@ RSpec.describe PageMigration::Commands::Export do
     end
 
     context "with custom languages" do
-      let(:command) { described_class.new(org_ref, languages: %w[fr cs de]) }
+      subject(:command) { described_class.new(org_ref, languages: %w[fr cs de]) }
 
       it "exports only specified languages" do
         expect(PageMigration::Generators::FullExportGenerator).to receive(:new)
@@ -74,7 +74,7 @@ RSpec.describe PageMigration::Commands::Export do
     end
 
     context "with custom_only option" do
-      let(:command) { described_class.new(org_ref, custom_only: true) }
+      subject(:command) { described_class.new(org_ref, custom_only: true) }
 
       it "passes custom_only to generator" do
         expect(PageMigration::Generators::FullExportGenerator).to receive(:new)
@@ -90,7 +90,7 @@ RSpec.describe PageMigration::Commands::Export do
     end
 
     context "with tree option" do
-      let(:command) { described_class.new(org_ref, tree: true) }
+      subject(:command) { described_class.new(org_ref, tree: true) }
 
       it "uses TreeExportGenerator" do
         expect(PageMigration::Generators::TreeExportGenerator).to receive(:new)
@@ -100,7 +100,7 @@ RSpec.describe PageMigration::Commands::Export do
     end
 
     context "with custom output_dir" do
-      let(:command) { described_class.new(org_ref, output_dir: "custom/export") }
+      subject(:command) { described_class.new(org_ref, output_dir: "custom/export") }
 
       it "creates custom output directory" do
         expect(FileUtils).to receive(:mkdir_p).with("custom/export")

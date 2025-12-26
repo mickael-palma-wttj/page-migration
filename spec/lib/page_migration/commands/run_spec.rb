@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe PageMigration::Commands::Run do
+  subject(:command) { described_class.new(org_ref) }
+
   let(:org_ref) { "Pg4eV6k" }
-  let(:command) { described_class.new(org_ref) }
 
   describe "#call" do
     let(:extract_command) { instance_double(PageMigration::Commands::Extract, call: "tmp/output.json") }
@@ -30,7 +31,8 @@ RSpec.describe PageMigration::Commands::Run do
   end
 
   describe "with custom options" do
-    let(:command) { described_class.new(org_ref, json_output: "custom.json", md_output_dir: "output/") }
+    subject(:command) { described_class.new(org_ref, json_output: "custom.json", md_output_dir: "output/") }
+
     let(:extract_command) { instance_double(PageMigration::Commands::Extract, call: "custom.json") }
     let(:convert_command) { instance_double(PageMigration::Commands::Convert, call: nil) }
 

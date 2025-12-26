@@ -4,9 +4,10 @@ require "tempfile"
 require "fileutils"
 
 RSpec.describe PageMigration::Services::PromptProcessor do
+  subject(:processor) { described_class.new(client, [], runner, language: "fr", debug: false) }
+
   let(:client) { instance_double(PageMigration::Dust::Client) }
   let(:runner) { instance_double(PageMigration::Dust::Runner) }
-  let(:processor) { described_class.new(client, [], runner, language: "fr", debug: false) }
   let(:output_root) { Dir.mktmpdir }
 
   after { FileUtils.rm_rf(output_root) }
