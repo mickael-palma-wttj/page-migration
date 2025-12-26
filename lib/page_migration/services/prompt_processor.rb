@@ -130,10 +130,13 @@ module PageMigration
         # Check for YAML frontmatter (starts with ---)
         if content.start_with?("---")
           parse_yaml_frontmatter(content, path)
-        else
-          # Remove markdown fences if present and parse as JSON
+        elsif content.strip.start_with?("{")
+          # JSON format
           content = content.gsub(/^```prompt\n/, "").gsub(/\n```$/, "")
           JSON.parse(content)
+        else
+          # Plain markdown - use content as instructions with defaults
+          parse_plain_markdown(content, path)
         end
       rescue JSON::ParserError => e
         raise "Failed to parse JSON in #{path}: #{e.message}"
@@ -152,6 +155,18 @@ module PageMigration
         frontmatter
       rescue Psych::SyntaxError => e
         raise "Failed to parse YAML frontmatter in #{path}: #{e.message}"
+      end
+
+      def parse_plain_markdown(content, path)
+        # Extract role/task from first heading if present, otherwise use defaults
+        prompt_name = File.basename(path, ".prompt.md").tr("_", " ").capitalize
+
+        {
+          "role" => "Content Analyst",
+          "task" => prompt_name,
+          "content" => content.strip,
+          "output_format" => {"type" => "markdown"}
+        }
       end
 
       def debug_log(message)
