@@ -38,17 +38,32 @@ module PageMigration
         )
 
         queue = Queue.new
+        errors = Queue.new
         prompts.each { |p| queue << p }
 
         workers = Config::WORKER_COUNT.times.map do
           Thread.new do
             while !queue.empty? && (path = safe_pop(queue))
-              @processor.process(path, summary, output_root, additional_instructions: additional_instructions)
+              begin
+                @processor.process(path, summary, output_root, additional_instructions: additional_instructions)
+              rescue => e
+                errors << {path: path, error: e}
+              end
               progress.increment
             end
           end
         end
         workers.each(&:join)
+
+        report_errors(errors) unless errors.empty?
+      end
+
+      def report_errors(errors)
+        puts "\n⚠️  Some prompts failed to process:"
+        until errors.empty?
+          err = errors.pop
+          puts "  - #{File.basename(err[:path])}: #{err[:error].message}"
+        end
       end
 
       def safe_pop(queue)
