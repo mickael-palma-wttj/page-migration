@@ -44,8 +44,6 @@ module PageMigration
 
       private
 
-      MAX_FRAGMENT_SIZE = 500_000 # ~500KB to stay under 512KB limit
-
       def execute(config, summary, instructions)
         language_name = (@language == "fr") ? "French" : "English"
         user_content = "Role: #{config["role"]}\n" \
@@ -64,9 +62,9 @@ module PageMigration
       end
 
       def build_content_fragments(content)
-        return [{title: "Organization Data", content: content}] if content.bytesize <= MAX_FRAGMENT_SIZE
+        return [{title: "Organization Data", content: content}] if content.bytesize <= Config::MAX_FRAGMENT_SIZE
 
-        chunks = chunk_content(content, MAX_FRAGMENT_SIZE)
+        chunks = chunk_content(content, Config::MAX_FRAGMENT_SIZE)
         chunks.each_with_index.map do |chunk, index|
           {title: "Organization Data (Part #{index + 1}/#{chunks.length})", content: chunk}
         end

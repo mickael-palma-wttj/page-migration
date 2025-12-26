@@ -8,8 +8,7 @@ module PageMigration
     # Command to generate assets using Dust API based on prompts
     class Migrate
       include Loggable
-      EXPORT_DIR = "tmp/export"
-      ANALYSIS_DIR = "tmp/analysis"
+
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
       ANALYSIS_PROMPT = File.expand_path("../prompts/analysis.prompt.md", __dir__)
 
@@ -58,11 +57,11 @@ module PageMigration
           raise PageMigration::Error, "Analysis prompt not found: #{ANALYSIS_PROMPT}"
         end
 
-        FileUtils.mkdir_p(ANALYSIS_DIR)
+        FileUtils.mkdir_p(Config::ANALYSIS_DIR)
         org_name = Utils.sanitize_filename(org_data["name"])
-        output_file = File.join(ANALYSIS_DIR, "#{@org_ref}_#{org_name}_analysis.md")
+        output_file = File.join(Config::ANALYSIS_DIR, "#{@org_ref}_#{org_name}_analysis.md")
 
-        result = @processor.process(ANALYSIS_PROMPT, content_summary, ANALYSIS_DIR, save: false)
+        result = @processor.process(ANALYSIS_PROMPT, content_summary, Config::ANALYSIS_DIR, save: false)
 
         if result
           File.write(output_file, strip_markdown_fences(result))
@@ -136,10 +135,10 @@ module PageMigration
 
       def find_exported_md(org_data)
         org_name = Utils.sanitize_filename(org_data["name"])
-        path = File.join(EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
+        path = File.join(Config::EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
         return path if File.exist?(path)
 
-        Dir.glob(File.join(EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
+        Dir.glob(File.join(Config::EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
       end
 
       def strip_markdown_fences(text)

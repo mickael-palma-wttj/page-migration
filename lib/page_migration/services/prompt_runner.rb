@@ -6,8 +6,6 @@ module PageMigration
   module Services
     # Handles parallel or sequential execution of prompts
     class PromptRunner
-      WORKER_COUNT = 5
-
       def initialize(processor, debug: false)
         @processor = processor
         @debug = debug
@@ -42,7 +40,7 @@ module PageMigration
         queue = Queue.new
         prompts.each { |p| queue << p }
 
-        workers = WORKER_COUNT.times.map do
+        workers = Config::WORKER_COUNT.times.map do
           Thread.new do
             while !queue.empty? && (path = safe_pop(queue))
               @processor.process(path, summary, output_root, additional_instructions: additional_instructions)

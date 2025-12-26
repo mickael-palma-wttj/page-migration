@@ -7,10 +7,9 @@ module PageMigration
   module Commands
     # Command to export complete organization content as Markdown per language
     class Export
-      DEFAULT_OUTPUT_DIR = "tmp/export"
       LANGUAGES = %w[fr en].freeze
 
-      def initialize(org_ref, output_dir: DEFAULT_OUTPUT_DIR, languages: LANGUAGES, custom_only: false, tree: false)
+      def initialize(org_ref, output_dir: Config::EXPORT_DIR, languages: LANGUAGES, custom_only: false, tree: false)
         @org_ref = org_ref
         @output_dir = output_dir
         @languages = languages

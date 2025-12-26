@@ -8,7 +8,6 @@ module PageMigration
     # Simple client for the Dust API
     class Client
       BASE_URL = "https://dust.tt/api/v1"
-      DEFAULT_TIMEOUT = 300
       OPEN_TIMEOUT = 10
 
       attr_reader :workspace_id
@@ -82,7 +81,7 @@ module PageMigration
         @connection ||= Faraday.new do |f|
           f.headers["Authorization"] = "Bearer #{@api_key}"
           f.headers["Content-Type"] = "application/json"
-          f.options.timeout = DEFAULT_TIMEOUT
+          f.options.timeout = Config::DEFAULT_TIMEOUT
           f.options.open_timeout = OPEN_TIMEOUT
           f.adapter Faraday.default_adapter
         end
