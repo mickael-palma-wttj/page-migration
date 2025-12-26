@@ -8,6 +8,7 @@ gem "ruby-progressbar"
 gem "zeitwerk"
 
 group :development do
+  gem "bundler-audit", require: false
   gem "standard", require: false
 end
 
