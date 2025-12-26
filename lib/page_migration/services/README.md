@@ -19,7 +19,7 @@ processor = PageMigration::Services::PromptProcessor.new(
 )
 
 result = processor.process(
-  'prompts/migration/example.prompt.md',
+  'lib/page_migration/prompts/migration/example.prompt.md',
   content_summary,
   'tmp/output',
   additional_instructions: "Extra guidelines..."

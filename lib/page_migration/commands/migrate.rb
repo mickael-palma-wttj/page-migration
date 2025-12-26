@@ -8,6 +8,7 @@ module PageMigration
     # Command to generate assets using Dust API based on prompts
     class Migrate
       EXPORT_DIR = "tmp/export"
+      PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
 
       def initialize(org_ref, language: "fr", debug: false)
         @org_ref = org_ref
@@ -86,7 +87,7 @@ module PageMigration
         analysis_result = run_analysis(summary, output_root)
         debug_log "Brand analysis complete" if analysis_result
 
-        prompts = Dir.glob("prompts/migration/**/*.prompt.md").sort
+        prompts = Dir.glob(File.join(PROMPTS_DIR, "**/*.prompt.md")).sort
         prompts.reject! { |p| p.include?("file_analysis.prompt.md") }
 
         debug_log "Found #{prompts.length} prompts to process"
@@ -98,7 +99,7 @@ module PageMigration
       end
 
       def run_analysis(summary, output_root)
-        path = "prompts/migration/file_analysis.prompt.md"
+        path = File.join(PROMPTS_DIR, "file_analysis.prompt.md")
         return nil unless File.exist?(path)
 
         @processor.process(path, summary, output_root)

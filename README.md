@@ -75,6 +75,7 @@ lib/
     commands/                # CLI command implementations
     dust/                    # Dust API client and runner
     generators/              # Content export generators
+    prompts/                 # AI prompt templates
     queries/                 # SQL query definitions
     renderers/               # Shared rendering modules
     services/                # Business logic services
@@ -88,6 +89,7 @@ lib/
 | `commands/` | CLI command classes (extract, export, migrate, etc.) |
 | `dust/` | Dust AI API client and conversation runner |
 | `generators/` | Content generators (Markdown, text, tree exports) |
+| `prompts/` | AI prompt templates for migration workflows |
 | `queries/` | SQL queries for organization and page tree data |
 | `renderers/` | Shared rendering logic (content, tree, records) |
 | `services/` | Business logic (prompt processing, AI workflows) |

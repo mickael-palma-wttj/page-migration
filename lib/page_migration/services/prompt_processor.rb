@@ -7,6 +7,8 @@ module PageMigration
   module Services
     # Processes a single prompt file and generates the output using Dust API
     class PromptProcessor
+      PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
+
       def initialize(client, _assistant_ids, runner, language: "fr", debug: false)
         @client = client
         @runner = runner
@@ -82,7 +84,7 @@ module PageMigration
       end
 
       def build_target_path(prompt_path, output_root, name)
-        relative = prompt_path.sub(%r{^prompts/migration/}, "")
+        relative = prompt_path.sub(%r{^#{Regexp.escape(PROMPTS_DIR)}/}o, "")
         subfolder = File.dirname(relative)
         target_dir = (subfolder == ".") ? output_root : File.join(output_root, subfolder)
         FileUtils.mkdir_p(target_dir)
