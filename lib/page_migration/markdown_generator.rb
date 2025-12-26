@@ -69,7 +69,7 @@ module PageMigration
       @buffer << "- **Record Type:** `#{item['record_type'] || 'N/A'}`\n"
       @buffer << "- **Position:** #{item['position'] || 0}\n"
 
-      record_md = RecordRenderer.new(item['record'], item['record_type']).render
+      record_md = Renderers::RecordRenderer.new(item['record'], item['record_type']).render
       @buffer << record_md if record_md
       render_properties(item['properties'])
     end

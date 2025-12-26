@@ -6,7 +6,7 @@ module PageMigration
   module Generators
     # Generates a complete Markdown export with tree view and all page content by language
     class FullExportGenerator
-      include ContentRenderer
+      include Renderers::ContentRenderer
 
       SUPPORTED_LANGUAGES = %w[fr en cs sk].freeze
 
@@ -76,7 +76,7 @@ module PageMigration
       end
 
       def render_tree_node(page, prefix, is_last)
-        is_custom = PageClassifier.custom?(page['slug'])
+        is_custom = Renderers::PageClassifier.custom?(page['slug'])
         should_render = !@custom_only || is_custom
 
         if should_render
@@ -99,7 +99,7 @@ module PageMigration
 
       def filtered_tree
         @filtered_tree ||= if @custom_only
-                             (@tree['page_tree'] || []).select { |p| PageClassifier.custom?(p['slug']) }
+                             (@tree['page_tree'] || []).select { |p| Renderers::PageClassifier.custom?(p['slug']) }
                            else
                              @tree['page_tree'] || []
                            end
@@ -143,7 +143,7 @@ module PageMigration
       end
 
       def render_page_with_children(tree_page, heading_level)
-        is_custom = PageClassifier.custom?(tree_page['slug'])
+        is_custom = Renderers::PageClassifier.custom?(tree_page['slug'])
         should_render = !@custom_only || is_custom
 
         if should_render
@@ -195,7 +195,7 @@ module PageMigration
         item_buffer = []
 
         if item['record']
-          record_md = RecordRenderer.new(item['record'], item['record_type']).render
+          record_md = Renderers::RecordRenderer.new(item['record'], item['record_type']).render
           item_buffer << record_md if record_md
         end
 

@@ -6,7 +6,7 @@ module PageMigration
   module Generators
     # Generates a hierarchical directory structure with one Markdown file per page
     class TreeExportGenerator
-      include ContentRenderer
+      include Renderers::ContentRenderer
 
       def initialize(org_data, tree_data, language:, output_dir:, custom_only: false)
         @org = org_data
@@ -32,7 +32,7 @@ module PageMigration
       private
 
       def export_node(tree_page, current_path)
-        is_custom = PageClassifier.custom?(tree_page["slug"])
+        is_custom = Renderers::PageClassifier.custom?(tree_page["slug"])
         should_render = !@custom_only || is_custom
 
         node_dir = determine_node_dir(tree_page, current_path)
@@ -88,7 +88,7 @@ module PageMigration
       def render_items(items, buffer)
         items.each do |item|
           if item["record"]
-            record_md = RecordRenderer.new(item["record"], item["record_type"]).render
+            record_md = Renderers::RecordRenderer.new(item["record"], item["record_type"]).render
             buffer << record_md if record_md
           end
 
