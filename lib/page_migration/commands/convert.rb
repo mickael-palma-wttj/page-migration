@@ -17,7 +17,7 @@ module PageMigration
       def call
         input_file = determine_input
         FileUtils.mkdir_p(@output_dir)
-        organizations = JsonLoader.load(input_file)
+        organizations = Support::JsonLoader.load(input_file)
 
         organizations.each { |org| process_org(org) }
         puts "\n✅ Generated #{organizations.length} files in #{@output_dir}"

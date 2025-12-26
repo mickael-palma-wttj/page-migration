@@ -45,7 +45,7 @@ module PageMigration
 
       def load_org_data
         input_file = find_input_file
-        data = JsonLoader.load(input_file).first
+        data = Support::JsonLoader.load(input_file).first
         raise PageMigration::Error, 'No organization data found' unless data
 
         data
