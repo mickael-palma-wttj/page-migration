@@ -2,7 +2,6 @@
 
 require 'json'
 require 'fileutils'
-require 'ruby-progressbar'
 
 module PageMigration
   module Commands
@@ -21,8 +20,9 @@ module PageMigration
           debug: @debug
         )
 
-        @runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'), debug: @debug)
-        @processor = PageMigration::Services::PromptProcessor.new(@client, {}, @runner, language: @language, debug: @debug)
+        dust_runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'), debug: @debug)
+        @processor = PageMigration::Services::PromptProcessor.new(@client, {}, dust_runner, language: @language, debug: @debug)
+        @prompt_runner = PageMigration::Services::PromptRunner.new(@processor, debug: @debug)
       end
 
       def call
@@ -97,39 +97,7 @@ module PageMigration
         debug_log "Found #{prompts.length} prompts to process"
         prompts.each { |p| debug_log "  - #{p}" } if @debug
 
-        if @debug
-          # Sequential processing in debug mode for clearer output
-          puts "\nProcessing #{prompts.length} prompts sequentially (debug mode)..."
-          prompts.each_with_index do |path, idx|
-            puts "\n[#{idx + 1}/#{prompts.length}] Processing: #{File.basename(path)}"
-            @processor.process(path, summary, output_root, additional_instructions: analysis_result)
-          end
-        else
-          puts "\nProcessing #{prompts.length} prompts in parallel..."
-          progress = ProgressBar.create(
-            title: 'Migration',
-            total: prompts.length,
-            format: '%t: %c/%C |%B| %p%% %e'
-          )
-
-          queue = Queue.new
-          prompts.each { |p| queue << p }
-
-          # Use 5 threads for parallel processing
-          workers = 5.times.map do
-            Thread.new do
-              while !queue.empty? && (path = begin
-                queue.pop(true)
-              rescue StandardError
-                nil
-              end)
-                @processor.process(path, summary, output_root, additional_instructions: analysis_result)
-                progress.increment
-              end
-            end
-          end
-          workers.each(&:join)
-        end
+        @prompt_runner.run(prompts, summary, output_root, additional_instructions: analysis_result)
 
         puts "\n✅ Migration complete! Assets generated in #{output_root}/"
       end
