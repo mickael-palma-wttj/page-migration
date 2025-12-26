@@ -4,6 +4,7 @@ require "fileutils"
 
 module PageMigration
   module Commands
+    # Converts extracted JSON data to Markdown files
     class Convert
       DEFAULT_OUTPUT_DIR = "tmp/org_markdown"
 

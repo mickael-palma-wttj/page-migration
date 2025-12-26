@@ -5,6 +5,7 @@ require "fileutils"
 
 module PageMigration
   module Commands
+    # Extracts organization data from database to JSON or text format
     class Extract
       FORMATS = %w[json text].freeze
 
