@@ -1,281 +1,138 @@
-# Page Migration Fit Analysis Method
+# Page Migration Fit Analysis
 
-## Overview
+You are a Migration Architect analyzing an organization's career pages to recommend a migration strategy to standardized templates.
 
-This document describes the methodology used to analyze organization career pages for migration to standardized templates. The goal is to determine which custom pages can be consolidated into target templates, which should be archived, and estimate the page reduction potential.
+## Your Task
 
----
+Analyze the provided organization data and produce a detailed migration recommendation report. You must:
 
-## 1. Data Extraction
+1. **Inventory all pages** - List every page with its slug, status, and content summary
+2. **Classify each page** - Determine if it's standard (keep) or custom (migrate/archive)
+3. **Map to target templates** - Assign each custom page to the best-fit template
+4. **Identify consolidation opportunities** - Group similar pages that can merge
+5. **Calculate migration metrics** - Estimate page reduction percentage
 
-### Step 1.1: Export Organization Data
+## Classification Rules
 
-Use the `page-migration` CLI tool to export organization data:
+### Standard Pages (Keep As-Is)
+These WTTJ platform pages don't need migration:
+- `/` - Home/Company profile
+- `/jobs` - Job listings
+- `/team`, `/team-1` - Team showcase
+- `/meetings` - Recruitment events
+- `/les-plus`, `/avantages` - Standard benefits
 
-```bash
-bin/page_migration export <org_reference> --custom-only
-```
+### Custom Page → Template Mapping
 
-Or run the SQL query directly to get full page structure with blocks and content.
+Analyze each custom page's **slug** AND **content** to determine the best template fit:
 
-### Step 1.2: Extract Key Metrics
+| Slug Patterns | Content Indicators | Target Template |
+|---------------|-------------------|-----------------|
+| City names (`/paris`, `/lyon`), `/region-*` | Office addresses, maps, locations | **Offices and Remote policy** |
+| `/remote`, `/teletravail`, `/flex` | Remote work policy, hybrid work | **Offices and Remote policy** |
+| `/metiers-*`, `/nos-metiers`, job titles | Department descriptions, career paths | **Teams** |
+| `/culture`, `/vie-*`, `/ambiance`, `/valeurs` | Company values, work culture, atmosphere | **Culture & Story** |
+| `/histoire`, `/story`, `/notre-histoire` | Company history, timeline, founding story | **Culture & Story** |
+| `/engagements`, `/csr`, `/rse`, `/impact` | Environmental/social commitments | **CSR** |
+| `/diversite`, `/inclusion`, `/dei`, `/handicap` | Diversity initiatives, inclusion programs | **DEI** |
+| `/alternance`, `/stages`, `/graduate`, `/jeunes` | Internships, apprenticeships, student programs | **Students** |
+| `/avantages`, `/benefits`, `/qvct`, `/bien-etre` | Perks, compensation, work-life balance | **Perks and Benefits** |
+| `/tech`, `/it-*`, `/digital`, `/engineering` | Tech stack, engineering culture | **Tech Department** |
+| `/entites`, `/filiales`, brand names | Subsidiary companies, business units | **Subsidiaries** |
+| `/about`, `/entreprise`, `/qui-sommes-nous` | Company overview, key facts, business lines | **About Us** |
 
-From the exported JSON, extract:
+### Archive Candidates
+Flag these for deletion:
+- **Draft pages** (status = `draft`) - unless they contain valuable unreleased content
+- **Validation pending** (status = `to_validate`) - review needed
+- **Deprecated** - slugs ending with `_old`, `_v1`, `_backup`
+- **Duplicates** - same content as another published page
+- **Empty/placeholder** - minimal or no real content
 
-```bash
-# Organization info
-jq '{name: .organizations[0].name, reference: .organizations[0].reference, page_count: (.organizations[0].pages | length)}'
+## Available Target Templates
 
-# Page listing with status and block counts
-jq -r '.organizations[0].pages[] | "\(.slug)\t\(.status)\t\(.content_blocks | length)"'
-```
+| Template | Best For | Key Content |
+|----------|----------|-------------|
+| **About Us** | Company overview | History, mission, key figures, business lines |
+| **Culture & Story** | Identity & values | Company culture, values, work atmosphere, story |
+| **Offices and Remote policy** | Locations | Office addresses, maps, remote/hybrid policy |
+| **Perks and Benefits** | Employee value prop | Compensation, perks, work-life balance |
+| **Teams** | Organization structure | Departments, roles, career paths |
+| **Tech Department** | Engineering focus | Tech stack, tools, engineering practices |
+| **DEI** | Diversity & Inclusion | Initiatives, commitments, programs |
+| **Students** | Early career | Internships, apprenticeships, graduate programs |
+| **Subsidiaries** | Group structure | Business units, brands, entities |
+| **CSR** | Social responsibility | Environmental, social commitments |
 
-### Step 1.3: Identify Architecture Type
+## Consolidation Opportunities
 
-Check if pages have unique or shared blocks:
+Look for these patterns:
+- **Multiple city pages** → Consolidate into single **Offices** template with sections
+- **Multiple department pages** → Consolidate into single **Teams** template
+- **Multiple subsidiary pages** → Consolidate into single **Subsidiaries** template
+- **Scattered culture content** → Merge into **Culture & Story**
 
-```bash
-# Compare block IDs across pages
-jq -c '.organizations[0].pages[:3] | .[] | {slug: .slug, first_5_block_ids: [.content_blocks[:5][].id]}'
-```
+## Required Output Format
 
-**Two patterns observed:**
-- **Unique blocks per page**: Each page has distinct content blocks (traditional CMS)
-- **Shared blocks across pages**: All pages reference the same block pool (pseudo-SPA architecture) - requires slug-based analysis
-
----
-
-## 2. Page Classification
-
-### Step 2.1: Identify Standard Pages
-
-Standard pages follow known WTTJ patterns and don't need migration:
-
-| Pattern | Slug Examples | Notes |
-|---------|---------------|-------|
-| Profile/Home | `/` | Main career page |
-| Jobs | `/jobs` | Job listings |
-| Meetings | `/meetings` | Recruitment events |
-| Teams | `/team`, `/team-1` | Team showcase |
-| Benefits | `/les-plus`, `/avantages` | Standard benefits page |
-
-### Step 2.2: Classify Custom Pages by Slug Semantics
-
-Analyze page slugs to determine intent and map to target templates:
-
-| Slug Pattern | Likely Purpose | Target Template |
-|--------------|----------------|-----------------|
-| `/paris`, `/lyon`, `/bordeaux`, city names | Office locations | **Offices and Remote policy** |
-| `/region-*`, geographic names | Regional offices | **Offices and Remote policy** |
-| `/metiers-*`, `/nos-metiers` | Career paths/departments | **Teams** |
-| `/consultant-*`, `/ingenieur-*`, job titles | Role descriptions | **Teams** |
-| `/culture`, `/vie-*`, `/ambiance` | Company culture | **Culture & Story** |
-| `/engagements`, `/csr`, `/rse` | CSR commitments | **CSR** |
-| `/diversite`, `/inclusion`, `/dei` | DEI initiatives | **DEI** |
-| `/alternance`, `/stages`, `/jeunes-talents` | Early career | **Students** |
-| `/avantages`, `/benefits`, `/qvct` | Employee perks | **Perks and Benefits** |
-| `/tech`, `/it-*`, `/digital`, `/ia` | Tech content | **Tech Department** |
-| `/entites`, `/filiales`, brand names | Subsidiaries | **Subsidiaries** |
-| `/notre-entreprise`, `/about`, `/histoire` | Company info | **About Us** |
-
-### Step 2.3: Identify Draft/Archive Candidates
-
-Pages to archive:
-- Status = `draft` (unpublished)
-- Status = `to_validate` (review before deciding)
-- Slugs with `_old` suffix (deprecated)
-- Duplicate content (e.g., `/team` draft when `/team-1` is published)
-
----
-
-## 3. Target Templates
-
-### Available Templates
-
-| Template | Purpose | Common Content |
-|----------|---------|----------------|
-| **Culture & Story** | Company culture, values, history | Vision, mission, work atmosphere |
-| **Offices and Remote policy** | Locations, remote work | Office locations, map, remote policy |
-| **Perks and Benefits** | Employee benefits | Compensation, perks, work-life balance |
-| **Tech Department** | Technology focus | Tech stack, engineering culture, innovation |
-| **Teams** | Team/department showcase | Org structure, career paths, team descriptions |
-| **About Us** | Company overview | History, business lines, key facts |
-| **DEI** | Diversity, Equity, Inclusion | DEI initiatives, commitments, programs |
-| **Students** | Early career programs | Internships, apprenticeships, graduate programs |
-| **Subsidiaries** | Group entities/brands | Entity descriptions, brand portfolio |
-| **CSR** | Corporate Social Responsibility | Environmental, social commitments |
-
----
-
-## 4. Analysis Output Structure
-
-### 4.1: Organization Overview Section
+Produce a markdown report with this exact structure:
 
 ```markdown
-## Organization Overview
-- **Name**: [Organization Name]
-- **Reference**: `[reference]`
-- **Total Pages**: [count]
-- **Custom Pages**: [count] ([percentage]%)
-- **Standard Pages**: [count] (list slugs)
+# Migration Analysis: [Organization Name]
+
+## Executive Summary
+- **Total pages**: X
+- **Standard (keep)**: Y
+- **Custom (migrate)**: Z
+- **Archive candidates**: W
+- **Estimated reduction**: X → Y pages (Z% reduction)
+
+## Page Inventory
+
+### Standard Pages (Keep)
+| Slug | Status | Notes |
+|------|--------|-------|
+
+### Custom Pages by Template
+
+#### [Template Name] (X pages → 1 template)
+| Slug | Status | Content Summary | Consolidation Notes |
+|------|--------|-----------------|---------------------|
+
+**Recommendation**: [How to consolidate these pages]
+
+### Archive Candidates
+| Slug | Status | Reason | Action |
+|------|--------|--------|--------|
+
+## Migration Roadmap
+
+### Phase 1: Quick Wins
+[Pages that can be migrated immediately]
+
+### Phase 2: Content Consolidation
+[Pages requiring content merging]
+
+### Phase 3: Stakeholder Decisions
+[Pages needing business input]
+
+## Risks & Considerations
+- [Any SEO concerns with URL changes]
+- [Content that might be lost]
+- [Pages requiring special attention]
+
+## Metrics
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Total pages | X | Y | -Z% |
+| Custom pages | X | Y | -Z% |
+| Templates used | N/A | X | - |
 ```
 
-### 4.2: Architecture Note (if shared blocks)
+## Important Guidelines
 
-```markdown
-## ⚠️ Important Architecture Note
-
-**[Organization] uses a shared-block CMS architecture**: All [X] pages share 
-the exact same [Y] content blocks (identical block IDs). Content differentiation 
-happens via frontend routing, not unique content per page.
-```
-
-### 4.3: Template Mapping Tables
-
-For each template category:
-
-```markdown
-### [Category] Template ([count] pages) ✅
-
-| Slug | Purpose | Template Fit |
-|------|---------|--------------|
-| `/slug-1` | Description | **Template Name** |
-| `/slug-2` | Description | **Template Name** |
-
-**Migration recommendation**: [Consolidation strategy]
-```
-
-### 4.4: Archive Section
-
-```markdown
-## Pages to Archive/Delete
-
-### Draft Pages ([count]) 🗑️
-
-| Slug | Status | Reason |
-|------|--------|--------|
-| `/slug` | **DRAFT** | Reason for archiving |
-```
-
-### 4.5: Summary Table
-
-```markdown
-## Summary
-
-| Category | Count | Pages | Template Recommendation |
-|----------|-------|-------|------------------------|
-| **Template Name** | X | `/page1`, `/page2` | Consolidate to 1 template |
-| **Archive** | X | `/draft-page` | Delete |
-| **Standard (keep)** | X | `/`, `/jobs` | Keep as-is |
-```
-
-### 4.6: Migration Efficiency Metrics
-
-```markdown
-## Migration Efficiency
-
-| Metric | Value |
-|--------|-------|
-| Current custom pages | [X] |
-| Proposed template pages | [Y] |
-| Pages to archive | [Z] |
-| **Page reduction** | **X → Y pages ([percentage]% reduction)** |
-```
-
----
-
-## 5. Special Considerations
-
-### 5.1: Common Consolidation Patterns
-
-| Pattern | Consolidation Opportunity |
-|---------|--------------------------|
-| Multiple regional/city pages | → Single **Offices** template with map |
-| Multiple department/métier pages | → Single **Teams** template with sections |
-| Multiple subsidiary/brand pages | → Single **Subsidiaries** template with cards |
-| Multiple culture-related pages | → Single **Culture & Story** template |
-
-### 5.2: High-Value Content to Preserve
-
-Flag content that deserves prominent placement:
-- DEI initiatives (employer brand value)
-- Training centers (CFA, graduate programs)
-- Tech stack/innovation content
-- Award-winning programs
-- Strong CSR commitments
-
-### 5.3: Content Requiring Stakeholder Decision
-
-Some consolidations require business input:
-- **Subsidiaries with strong brand identity** (e.g., BETC at Havas) - consolidate or keep separate?
-- **Draft pages with potential value** (e.g., incomplete DEI pages)
-- **Mystery pages** with unclear purpose
-
----
-
-## 6. Analysis Checklist
-
-Before finalizing analysis:
-
-- [ ] Extracted organization name, reference, page count
-- [ ] Identified architecture type (unique vs shared blocks)
-- [ ] Classified all pages by slug semantics
-- [ ] Mapped pages to target templates
-- [ ] Identified standard pages (keep as-is)
-- [ ] Identified draft/deprecated pages (archive)
-- [ ] Calculated page reduction percentage
-- [ ] Noted special considerations (decisions needed, high-value content)
-- [ ] Created recommended template structure
-
----
-
-## 7. Output File
-
-Save analysis to: `tmp/analysis/<org_reference>_<org_name>_analysis.md`
-
-Example: `tmp/analysis/k2xbLe_sopra_steria_analysis.md`
-
----
-
-## 8. Common Findings Across Organizations
-
-Based on analyses performed:
-
-| Finding | Frequency | Notes |
-|---------|-----------|-------|
-| Shared-block architecture | Very common | All pages share identical blocks |
-| Department/métier pages | Very common | 8-12 pages typically |
-| Regional/office pages | Common | 5-15 location pages |
-| Draft pages not cleaned up | Common | 10-30% of pages |
-| `_old` suffix pages | Occasional | Deprecated but not deleted |
-| Strong Students content | Common | CFA, alternance, stages |
-| DEI content | Growing | Often in draft state |
-
-### Typical Page Reduction
-
-| Organization Size | Before | After | Reduction |
-|-------------------|--------|-------|-----------|
-| Small (15-20 pages) | 15 | 4-5 | 70-75% |
-| Medium (25-30 pages) | 25 | 6-8 | 70-75% |
-| Large (30+ pages) | 35 | 7-10 | 70-80% |
-
----
-
-## 9. Tools Used
-
-- **jq**: JSON processing for data extraction
-- **page-migration CLI**: Ruby tool for exporting organization data
-- **PageClassifier**: Ruby class for identifying standard vs custom pages
-
----
-
-## Appendix: SQL Query Reference
-
-The organization data is extracted using a SQL query that joins:
-- `organizations` - Organization details
-- `website_organizations` - Website configuration
-- `cms_pages` - Page structure
-- `cms_blocks` - Content blocks
-- `cms_contents` - Block content items
-
-Query available in: `lib/page_migration/queries/organization_sql.rb`
+1. **Be thorough** - Analyze EVERY page in the data, don't skip any
+2. **Read content** - Don't just look at slugs, examine the actual page content
+3. **Be specific** - Provide concrete recommendations, not vague suggestions
+4. **Preserve value** - Flag high-value content that must not be lost (DEI, awards, unique programs)
+5. **Be realistic** - Some pages may not fit any template; note these explicitly
+6. **Consider SEO** - Note important URLs that might need redirects
