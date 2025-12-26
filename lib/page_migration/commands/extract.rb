@@ -18,7 +18,7 @@ module PageMigration
 
       def call
         Database.with_connection do |conn|
-          json_data = OrganizationQuery.new(@org_ref).call(conn)
+          json_data = Queries::OrganizationQuery.new(@org_ref).call(conn)
           org_data = JSON.parse(json_data)["organizations"].first
 
           @output ||= build_default_output(org_data)

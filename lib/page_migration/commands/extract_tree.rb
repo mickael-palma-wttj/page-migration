@@ -30,7 +30,7 @@ module PageMigration
 
       def fetch_data
         Database.with_connection do |conn|
-          PageTreeQuery.new(@org_ref).call(conn)
+          Queries::PageTreeQuery.new(@org_ref).call(conn)
         end
       rescue PG::Error => e
         raise PageMigration::Error, "Database error: #{e.message}"

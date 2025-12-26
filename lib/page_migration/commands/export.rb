@@ -31,8 +31,8 @@ module PageMigration
 
       def fetch_data
         Database.with_connection do |conn|
-          org_json = OrganizationQuery.new(@org_ref).call(conn)
-          tree_json = PageTreeQuery.new(@org_ref).call(conn)
+          org_json = Queries::OrganizationQuery.new(@org_ref).call(conn)
+          tree_json = Queries::PageTreeQuery.new(@org_ref).call(conn)
 
           org_data = JSON.parse(org_json)['organizations'].first
           tree_data = JSON.parse(tree_json)
