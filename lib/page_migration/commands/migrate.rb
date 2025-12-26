@@ -61,7 +61,7 @@ module PageMigration
         org_name = Utils.sanitize_filename(org_data["name"])
         output_file = File.join(ANALYSIS_DIR, "#{@org_ref}_#{org_name}_analysis.md")
 
-        result = @processor.process(ANALYSIS_PROMPT, content_summary, ANALYSIS_DIR)
+        result = @processor.process(ANALYSIS_PROMPT, content_summary, ANALYSIS_DIR, save: false)
 
         if result
           File.write(output_file, result)

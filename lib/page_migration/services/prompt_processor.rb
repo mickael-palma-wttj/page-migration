@@ -18,10 +18,9 @@ module PageMigration
         @debug = debug
       end
 
-      def process(prompt_path, content_summary, output_root, additional_instructions: nil)
+      def process(prompt_path, content_summary, output_root, additional_instructions: nil, save: true)
         config = parse_prompt_file(prompt_path)
         prompt_name = File.basename(prompt_path, ".prompt.md")
-        target_path = build_target_path(prompt_path, output_root, prompt_name)
 
         debug_log "Prompt: #{prompt_name}"
         debug_log "  Role: #{config["role"]}"
@@ -33,8 +32,11 @@ module PageMigration
         debug_log "  Response received (#{result[:content]&.length || 0} chars)"
         debug_log "  Conversation URL: #{result[:url]}" if result[:url]
 
-        save_result(target_path, result[:content], prompt_name)
-        debug_log "  Saved to: #{target_path}"
+        if save
+          target_path = build_target_path(prompt_path, output_root, prompt_name)
+          save_result(target_path, result[:content], prompt_name)
+          debug_log "  Saved to: #{target_path}"
+        end
 
         result[:content]
       end
