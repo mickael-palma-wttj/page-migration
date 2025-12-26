@@ -88,7 +88,13 @@ module PageMigration
       end
 
       def handle_response(response)
-        raise "Dust API Error: #{response.status} - #{response.body}" unless response.success?
+        unless response.success?
+          raise DustApiError.new(
+            "Dust API Error: #{response.status}",
+            status: response.status,
+            response_body: response.body
+          )
+        end
 
         parsed = JSON.parse(response.body, symbolize_names: true)
         debug_response(parsed) if @debug
