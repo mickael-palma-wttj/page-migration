@@ -38,6 +38,7 @@ module PageMigration
         page_migration run Pg4eV6k                        # Full pipeline
         page_migration migrate Pg4eV6k                    # Generate AI assets (uses exported MD)
         page_migration migrate Pg4eV6k -l en              # Generate AI assets using English source
+        page_migration migrate Pg4eV6k --analysis         # Run page migration fit analysis only
     HELP
 
     def initialize(args)
@@ -170,6 +171,7 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration migrate <org_reference> [options]"
         opts.on("-l", "--language LANG", "Language for content generation (default: fr)") { |v| @options[:language] = v }
+        opts.on("-a", "--analysis", "Run page migration fit analysis only") { @options[:analysis] = true }
         opts.on("-d", "--debug", "Enable debug mode with detailed output") { @options[:debug] = true }
         opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end

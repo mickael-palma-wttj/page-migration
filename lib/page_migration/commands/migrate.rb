@@ -8,12 +8,15 @@ module PageMigration
     # Command to generate assets using Dust API based on prompts
     class Migrate
       EXPORT_DIR = "tmp/export"
+      ANALYSIS_DIR = "tmp/analysis"
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
+      ANALYSIS_PROMPT = File.expand_path("../prompts/analysis.prompt.md", __dir__)
 
-      def initialize(org_ref, language: "fr", debug: false)
+      def initialize(org_ref, language: "fr", debug: false, analysis: false)
         @org_ref = org_ref
         @language = language
         @debug = debug
+        @analysis_only = analysis
 
         @client = PageMigration::Dust::Client.new(
           ENV.fetch("DUST_WORKSPACE_ID"),
@@ -36,13 +39,38 @@ module PageMigration
         debug_log "Content size: #{content_summary.bytesize} bytes"
         debug_log "Language: #{@language}"
 
-        output_root = build_output_root(org_data)
-        debug_log "Output directory: #{output_root}"
-
-        run_migration_workflow(content_summary, output_root)
+        if @analysis_only
+          run_analysis_only(org_data, content_summary)
+        else
+          output_root = build_output_root(org_data)
+          debug_log "Output directory: #{output_root}"
+          run_migration_workflow(content_summary, output_root)
+        end
       end
 
       private
+
+      def run_analysis_only(org_data, content_summary)
+        puts "\n📊 Running page migration fit analysis..."
+
+        unless File.exist?(ANALYSIS_PROMPT)
+          raise PageMigration::Error, "Analysis prompt not found: #{ANALYSIS_PROMPT}"
+        end
+
+        FileUtils.mkdir_p(ANALYSIS_DIR)
+        org_name = Utils.sanitize_filename(org_data["name"])
+        output_file = File.join(ANALYSIS_DIR, "#{@org_ref}_#{org_name}_analysis.md")
+
+        result = @processor.process(ANALYSIS_PROMPT, content_summary, ANALYSIS_DIR)
+
+        if result
+          File.write(output_file, result)
+          puts "\n✅ Analysis complete!"
+          puts "   Output: #{output_file}"
+        else
+          raise PageMigration::Error, "Analysis failed - no result returned"
+        end
+      end
 
       def load_org_data
         input_file = find_input_file
