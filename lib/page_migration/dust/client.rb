@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "faraday"
+require "net/http"
 require "json"
+require "uri"
 
 module PageMigration
   module Dust
@@ -20,7 +21,7 @@ module PageMigration
       end
 
       def create_conversation(title: nil, message: nil, blocking: true)
-        url = "#{BASE_URL}/w/#{@workspace_id}/assistant/conversations"
+        path = "/w/#{@workspace_id}/assistant/conversations"
         payload = {
           title: title || "Migration Task #{Time.now.to_i}",
           visibility: "unlisted",
@@ -28,12 +29,11 @@ module PageMigration
         }
         payload[:message] = message if message
 
-        response = connection.post(url) { |req| req.body = payload.to_json }
-        handle_response(response)
+        post(path, payload)
       end
 
       def create_content_fragment(conversation_id, title, content)
-        url = "#{BASE_URL}/w/#{@workspace_id}/assistant/conversations/#{conversation_id}/content_fragments"
+        path = "/w/#{@workspace_id}/assistant/conversations/#{conversation_id}/content_fragments"
         payload = {
           title: title,
           content: content,
@@ -41,12 +41,11 @@ module PageMigration
           context: default_context
         }
 
-        response = connection.post(url) { |req| req.body = payload.to_json }
-        handle_response(response)
+        post(path, payload)
       end
 
       def create_message(conversation_id, agent_id, content)
-        url = "#{BASE_URL}/w/#{@workspace_id}/assistant/conversations/#{conversation_id}/messages"
+        path = "/w/#{@workspace_id}/assistant/conversations/#{conversation_id}/messages"
         payload = {
           content: content,
           mentions: [{configurationId: agent_id}],
@@ -54,14 +53,12 @@ module PageMigration
           blocking: true
         }
 
-        response = connection.post(url) { |req| req.body = payload.to_json }
-        handle_response(response)
+        post(path, payload)
       end
 
       def get_conversation(conversation_id)
-        url = "#{BASE_URL}/w/#{@workspace_id}/assistant/conversations/#{conversation_id}"
-        response = connection.get(url)
-        handle_response(response)
+        path = "/w/#{@workspace_id}/assistant/conversations/#{conversation_id}"
+        get(path)
       end
 
       private
@@ -77,21 +74,37 @@ module PageMigration
         }
       end
 
-      def connection
-        @connection ||= Faraday.new do |f|
-          f.headers["Authorization"] = "Bearer #{@api_key}"
-          f.headers["Content-Type"] = "application/json"
-          f.options.timeout = Config::DEFAULT_TIMEOUT
-          f.options.open_timeout = OPEN_TIMEOUT
-          f.adapter Faraday.default_adapter
-        end
+      def post(path, payload)
+        uri = URI("#{BASE_URL}#{path}")
+        request = Net::HTTP::Post.new(uri)
+        request.body = payload.to_json
+        execute(uri, request)
+      end
+
+      def get(path)
+        uri = URI("#{BASE_URL}#{path}")
+        request = Net::HTTP::Get.new(uri)
+        execute(uri, request)
+      end
+
+      def execute(uri, request)
+        request["Authorization"] = "Bearer #{@api_key}"
+        request["Content-Type"] = "application/json"
+
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.open_timeout = OPEN_TIMEOUT
+        http.read_timeout = Config::DEFAULT_TIMEOUT
+
+        response = http.request(request)
+        handle_response(response)
       end
 
       def handle_response(response)
-        unless response.success?
+        unless response.is_a?(Net::HTTPSuccess)
           raise DustApiError.new(
-            "Dust API Error: #{response.status}",
-            status: response.status,
+            "Dust API Error: #{response.code}",
+            status: response.code.to_i,
             response_body: response.body
           )
         end

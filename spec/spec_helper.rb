@@ -16,5 +16,9 @@ $VERBOSE = nil
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "page_migration"
 
+# Load WebMock for HTTP stubbing
+require "webmock/rspec"
+WebMock.disable_net_connect!(allow_localhost: true)
+
 # Load support files
 Dir[File.expand_path("support/**/*.rb", __dir__)].each { |f| require f }

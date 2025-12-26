@@ -162,6 +162,13 @@ module PageMigration
       abort "Error: #{e.message}"
     end
 
+    def build_run_parser
+      OptionParser.new do |opts|
+        opts.banner = "Usage: page_migration run <org_reference> [options]"
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+      end
+    end
+
     def run_migrate
       parser = build_migrate_parser
       parser.parse!(@args)
