@@ -1,6 +1,7 @@
 {
   "name": "Page Migration",
   "image": "mcr.microsoft.com/devcontainers/ruby:3.4",
+  "runArgs": ["--network=host"],
   "customizations": {
     "vscode": {
       "extensions": [
