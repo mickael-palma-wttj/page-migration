@@ -62,12 +62,7 @@ module PageMigration
 
       def find_exported_txt(org_data)
         org_name = Utils.sanitize_filename(org_data['name'])
-        # Check new location in tmp folder
-        path = "tmp/query_result/#{@org_ref}_#{org_name}/contenu_#{@language}.txt"
-        return path if File.exist?(path)
-
-        # Fallback to glob in tmp folder
-        Dir.glob("tmp/query_result/#{@org_ref}_*/contenu_#{@language}.txt").first
+        Support::FileDiscovery.find_text_content(@org_ref, org_name, @language)
       end
 
       def ensure_markdown_exported(org_data)
@@ -122,17 +117,14 @@ module PageMigration
       end
 
       def find_input_file
-        # Check for the default extract location first
-        path = Dir.glob("tmp/query_result/#{@org_ref}_*/query.json").first
-        return path if path && File.exist?(path)
+        path = Support::FileDiscovery.find_query_json(@org_ref)
+        return path if path
 
-        # Check for the legacy/alternative location
-        path = "tmp/#{@org_ref}_organization.json"
-        return path if File.exist?(path)
+        path = Support::FileDiscovery.find_legacy_json(@org_ref)
+        return path if path
 
         puts "⚠️ Organization data not found for #{@org_ref}. Running extract first..."
-        extracted_path = Extract.new(@org_ref).call
-        extracted_path || path
+        Extract.new(@org_ref).call
       end
     end
   end

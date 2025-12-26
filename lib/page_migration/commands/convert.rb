@@ -27,19 +27,9 @@ module PageMigration
 
       def determine_input
         return @input if @input
-        return find_by_ref if @org_ref
+        return Support::FileDiscovery.find_query_json!(@org_ref) if @org_ref
 
-        find_latest || "tmp/query_result/query.json"
-      end
-
-      def find_by_ref
-        pattern = File.join("tmp/query_result", "#{@org_ref}_*", "query.json")
-        Dir.glob(pattern).first || raise(PageMigration::Error, "No query.json for #{@org_ref}")
-      end
-
-      def find_latest
-        all = Dir.glob(File.join("tmp/query_result", "*", "query.json"))
-        all.max_by { |f| File.mtime(f) }
+        Support::FileDiscovery.find_latest_query_json || 'tmp/query_result/query.json'
       end
 
       def process_org(org)
