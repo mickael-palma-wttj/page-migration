@@ -6,6 +6,8 @@ module PageMigration
   module Commands
     # Command to display page tree hierarchy in visual format
     class ShowTree
+      include Renderers::TreeRenderer
+
       DEFAULT_INPUT = "query_result/page_tree.json"
       SEPARATOR_LENGTH = 100
 
@@ -69,8 +71,7 @@ module PageMigration
         children.each_with_index do |page, index|
           is_last_child = index == children.length - 1
           print_page_line(page, prefix, is_last_child)
-          next_prefix = prefix + (is_last_child ? "    " : "│   ")
-          render_tree(page["id"].to_s, pages_by_ancestry, pages_by_id, next_prefix)
+          render_tree(page["id"].to_s, pages_by_ancestry, pages_by_id, tree_prefix(prefix, is_last_child))
         end
       end
 
@@ -79,12 +80,10 @@ module PageMigration
       end
 
       def print_page_line(page, prefix, is_last_child)
-        connector = is_last_child ? "└── " : "├── "
-        status_icon = (page["status"] == "published") ? "✅" : "❌"
         ref_str = page["reference"] ? " [#{page["reference"]}]" : ""
         pub_str = page["published_at"] ? " (published)" : ""
 
-        line = "#{prefix}#{connector}#{status_icon} #{page["slug"].ljust(35)}"
+        line = "#{prefix}#{tree_connector(is_last_child)}#{status_icon(page["status"])} #{page["slug"].ljust(35)}"
         line += ref_str unless ref_str.empty?
         line += pub_str unless pub_str.empty?
 

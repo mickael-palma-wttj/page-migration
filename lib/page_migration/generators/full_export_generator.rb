@@ -7,6 +7,7 @@ module PageMigration
     # Generates a complete Markdown export with tree view and all page content by language
     class FullExportGenerator
       include Renderers::ContentRenderer
+      include Renderers::TreeRenderer
 
       SUPPORTED_LANGUAGES = %w[fr en cs sk].freeze
 
@@ -61,9 +62,7 @@ module PageMigration
         pages = filtered_tree.sort_by { |p| p['slug'] }
         pages.each_with_index do |page, idx|
           is_last = idx == pages.length - 1
-          connector = is_last ? '└── ' : '├── '
-          status = page['status'] == 'published' ? '✅' : '❌'
-          @buffer << "#{connector}#{status} #{page['slug']}\n"
+          @buffer << "#{tree_connector(is_last)}#{status_icon(page['status'])} #{page['slug']}\n"
         end
       end
 
@@ -80,16 +79,13 @@ module PageMigration
         should_render = !@custom_only || is_custom
 
         if should_render
-          connector = is_last ? '└── ' : '├── '
-          status = page['status'] == 'published' ? '✅' : '❌'
           ref_tag = page['reference'] ? " [#{page['reference']}]" : ''
-          @buffer << "#{prefix}#{connector}#{status} #{page['slug']}#{ref_tag}\n"
+          @buffer << "#{prefix}#{tree_connector(is_last)}#{status_icon(page['status'])} #{page['slug']}#{ref_tag}\n"
         end
 
         children = tree_children(page['id'])
         children.each_with_index do |child, idx|
-          child_prefix = prefix + (is_last ? '    ' : '│   ')
-          render_tree_node(child, child_prefix, idx == children.length - 1)
+          render_tree_node(child, tree_prefix(prefix, is_last), idx == children.length - 1)
         end
       end
 
@@ -157,10 +153,9 @@ module PageMigration
 
       def render_page(tree_page, page, heading_level)
         heading = '#' * [heading_level, 6].min
-        status_icon = tree_page['status'] == 'published' ? '✅' : '❌'
         title = tree_page['name'] || 'Untitled'
 
-        @buffer << "#{heading} #{status_icon} #{tree_page['slug']} - #{title}\n\n"
+        @buffer << "#{heading} #{status_icon(tree_page['status'])} #{tree_page['slug']} - #{title}\n\n"
         render_page_meta(tree_page, page)
         render_blocks(page['content_blocks'] || [])
         @buffer << "---\n\n"
