@@ -17,18 +17,19 @@ module PageMigration
       end
 
       def call
-        conn = Database.connect
-        json_data = OrganizationQuery.new(@org_ref).call(conn)
-        org_data = JSON.parse(json_data)["organizations"].first
+        Database.with_connection do |conn|
+          json_data = OrganizationQuery.new(@org_ref).call(conn)
+          org_data = JSON.parse(json_data)["organizations"].first
 
-        @output ||= build_default_output(org_data)
-        FileUtils.mkdir_p(File.dirname(@output))
+          @output ||= build_default_output(org_data)
+          FileUtils.mkdir_p(File.dirname(@output))
 
-        case @format
-        when "json"
-          write_json(json_data)
-        when "text"
-          write_text(org_data)
+          case @format
+          when "json"
+            write_json(json_data)
+          when "text"
+            write_text(org_data)
+          end
         end
 
         @output
@@ -36,8 +37,6 @@ module PageMigration
         abort "❌ Database error: #{e.message}"
       rescue PageMigration::Error => e
         abort "❌ Error: #{e.message}"
-      ensure
-        conn&.close
       end
 
       private

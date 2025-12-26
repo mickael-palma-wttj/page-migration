@@ -30,18 +30,17 @@ module PageMigration
       private
 
       def fetch_data
-        conn = Database.connect
-        org_json = OrganizationQuery.new(@org_ref).call(conn)
-        tree_json = PageTreeQuery.new(@org_ref).call(conn)
+        Database.with_connection do |conn|
+          org_json = OrganizationQuery.new(@org_ref).call(conn)
+          tree_json = PageTreeQuery.new(@org_ref).call(conn)
 
-        org_data = JSON.parse(org_json)['organizations'].first
-        tree_data = JSON.parse(tree_json)
+          org_data = JSON.parse(org_json)['organizations'].first
+          tree_data = JSON.parse(tree_json)
 
-        [org_data, tree_data]
+          [org_data, tree_data]
+        end
       rescue PG::Error => e
         raise PageMigration::Error, "Database error: #{e.message}"
-      ensure
-        conn&.close
       end
 
       def generate_exports(org_data, tree_data)

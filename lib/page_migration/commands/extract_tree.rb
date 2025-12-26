@@ -29,12 +29,11 @@ module PageMigration
       private
 
       def fetch_data
-        conn = Database.connect
-        PageTreeQuery.new(@org_ref).call(conn)
+        Database.with_connection do |conn|
+          PageTreeQuery.new(@org_ref).call(conn)
+        end
       rescue PG::Error => e
         raise PageMigration::Error, "Database error: #{e.message}"
-      ensure
-        conn&.close
       end
 
       def write_output(data)
