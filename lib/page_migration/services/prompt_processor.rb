@@ -7,10 +7,11 @@ module PageMigration
   module Services
     # Processes a single prompt file and generates the output using Dust API
     class PromptProcessor
-      def initialize(client, _assistant_ids, runner, language: 'fr')
+      def initialize(client, _assistant_ids, runner, language: 'fr', debug: false)
         @client = client
         @runner = runner
         @language = language
+        @debug = debug
       end
 
       def process(prompt_path, content_summary, output_root, additional_instructions: nil)
@@ -18,10 +19,19 @@ module PageMigration
         prompt_name = File.basename(prompt_path, '.prompt.md')
         target_path = build_target_path(prompt_path, output_root, prompt_name)
 
+        debug_log "Prompt: #{prompt_name}"
+        debug_log "  Role: #{config['role']}"
+        debug_log "  Task: #{config['task']}"
+
         result = execute(config, content_summary, additional_instructions)
         return nil unless result
 
+        debug_log "  Response received (#{result[:content]&.length || 0} chars)"
+        debug_log "  Conversation URL: #{result[:url]}" if result[:url]
+
         save_result(target_path, result[:content], prompt_name)
+        debug_log "  Saved to: #{target_path}"
+
         result[:content]
       end
 
@@ -41,6 +51,8 @@ module PageMigration
         user_content += "\n\nOutput format: #{config['output_format'].to_json}"
 
         content_fragments = build_content_fragments(summary)
+        debug_log "  Content fragments: #{content_fragments.length} (#{content_fragments.map { |f| f[:content].bytesize }.sum} bytes total)"
+
         @runner.run(user_content, content_fragments: content_fragments)
       end
 
@@ -116,6 +128,10 @@ module PageMigration
         JSON.parse(content)
       rescue JSON::ParserError => e
         raise "Failed to parse JSON in #{path}: #{e.message}"
+      end
+
+      def debug_log(message)
+        puts "[DEBUG] #{message}" if @debug
       end
     end
   end

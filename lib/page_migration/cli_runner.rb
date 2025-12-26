@@ -170,6 +170,7 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = 'Usage: page_migration migrate <org_reference> [options]'
         opts.on('-l', '--language LANG', 'Language for content generation (default: fr)') { |v| @options[:language] = v }
+        opts.on('-d', '--debug', 'Enable debug mode with detailed output') { @options[:debug] = true }
         opts.on('-h', '--help', 'Show this help') { |_| puts opts and exit }
       end
     end

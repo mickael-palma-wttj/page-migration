@@ -10,17 +10,19 @@ module PageMigration
     class Migrate
       EXPORT_DIR = 'tmp/export'
 
-      def initialize(org_ref, language: 'fr')
+      def initialize(org_ref, language: 'fr', debug: false)
         @org_ref = org_ref
         @language = language
+        @debug = debug
 
         @client = PageMigration::Dust::Client.new(
           ENV.fetch('DUST_WORKSPACE_ID'),
-          ENV.fetch('DUST_API_KEY')
+          ENV.fetch('DUST_API_KEY'),
+          debug: @debug
         )
 
-        @runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'))
-        @processor = PageMigration::Services::PromptProcessor.new(@client, {}, @runner, language: @language)
+        @runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'), debug: @debug)
+        @processor = PageMigration::Services::PromptProcessor.new(@client, {}, @runner, language: @language, debug: @debug)
       end
 
       def call
@@ -30,7 +32,12 @@ module PageMigration
         puts "📖 Using content from: #{txt_file}"
         content_summary = File.read(txt_file)
 
+        debug_log "Content size: #{content_summary.bytesize} bytes"
+        debug_log "Language: #{@language}"
+
         output_root = build_output_root(org_data)
+        debug_log "Output directory: #{output_root}"
+
         run_migration_workflow(content_summary, output_root)
       end
 
@@ -82,34 +89,47 @@ module PageMigration
       def run_migration_workflow(summary, output_root)
         puts "\n🔍 Running brand analysis..."
         analysis_result = run_analysis(summary, output_root)
+        debug_log "Brand analysis complete" if analysis_result
 
         prompts = Dir.glob('prompts/migration/**/*.prompt.md').sort
         prompts.reject! { |p| p.include?('file_analysis.prompt.md') }
 
-        puts "\nProcessing #{prompts.length} prompts in parallel..."
-        progress = ProgressBar.create(
-          title: 'Migration',
-          total: prompts.length,
-          format: '%t: %c/%C |%B| %p%% %e'
-        )
+        debug_log "Found #{prompts.length} prompts to process"
+        prompts.each { |p| debug_log "  - #{p}" } if @debug
 
-        queue = Queue.new
-        prompts.each { |p| queue << p }
+        if @debug
+          # Sequential processing in debug mode for clearer output
+          puts "\nProcessing #{prompts.length} prompts sequentially (debug mode)..."
+          prompts.each_with_index do |path, idx|
+            puts "\n[#{idx + 1}/#{prompts.length}] Processing: #{File.basename(path)}"
+            @processor.process(path, summary, output_root, additional_instructions: analysis_result)
+          end
+        else
+          puts "\nProcessing #{prompts.length} prompts in parallel..."
+          progress = ProgressBar.create(
+            title: 'Migration',
+            total: prompts.length,
+            format: '%t: %c/%C |%B| %p%% %e'
+          )
 
-        # Use 5 threads for parallel processing
-        workers = 5.times.map do
-          Thread.new do
-            while !queue.empty? && (path = begin
-              queue.pop(true)
-            rescue StandardError
-              nil
-            end)
-              @processor.process(path, summary, output_root, additional_instructions: analysis_result)
-              progress.increment
+          queue = Queue.new
+          prompts.each { |p| queue << p }
+
+          # Use 5 threads for parallel processing
+          workers = 5.times.map do
+            Thread.new do
+              while !queue.empty? && (path = begin
+                queue.pop(true)
+              rescue StandardError
+                nil
+              end)
+                @processor.process(path, summary, output_root, additional_instructions: analysis_result)
+                progress.increment
+              end
             end
           end
+          workers.each(&:join)
         end
-        workers.each(&:join)
 
         puts "\n✅ Migration complete! Assets generated in #{output_root}/"
       end
@@ -131,6 +151,10 @@ module PageMigration
 
       def sanitize_filename(name)
         name.downcase.gsub(/[^a-z0-9]+/, '_').gsub(/^_|_$/, '')
+      end
+
+      def debug_log(message)
+        puts "[DEBUG] #{message}" if @debug
       end
 
       def find_input_file
