@@ -64,7 +64,7 @@ module PageMigration
         result = @processor.process(ANALYSIS_PROMPT, content_summary, ANALYSIS_DIR, save: false)
 
         if result
-          File.write(output_file, result)
+          File.write(output_file, strip_markdown_fences(result))
           puts "\n✅ Analysis complete!"
           puts "   Output: #{output_file}"
         else
@@ -143,6 +143,15 @@ module PageMigration
 
       def debug_log(message)
         puts "[DEBUG] #{message}" if @debug
+      end
+
+      def strip_markdown_fences(text)
+        # Remove markdown code fences and trim whitespace
+        if text =~ /```(?:markdown)?\n?(.*?)\n?```/m
+          Regexp.last_match(1).strip
+        else
+          text.strip
+        end
       end
 
       def find_input_file
