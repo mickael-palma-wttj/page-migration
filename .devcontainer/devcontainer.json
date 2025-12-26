@@ -1,0 +1,16 @@
+{
+  "name": "Page Migration",
+  "image": "mcr.microsoft.com/devcontainers/ruby:3.4",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp"
+      ],
+      "settings": {
+        "rubyLsp.enableExperimentalFeatures": true
+      }
+    }
+  },
+  "postCreateCommand": "bundle install",
+  "remoteUser": "vscode"
+}
