@@ -34,17 +34,13 @@ module PageMigration
       return nil if placeholder_image?
 
       lines = ["  - 🖼️ **Image:** `#{@record['file']}`"]
-      lines << "  - **Name:** #{@record['name']}" unless empty_value?(@record['name'])
-      lines << "  - **Description:** #{@record['description']}" unless empty_value?(@record['description'])
+      lines << "  - **Name:** #{@record['name']}" unless Utils.empty_value?(@record['name'])
+      lines << "  - **Description:** #{@record['description']}" unless Utils.empty_value?(@record['description'])
       "#{lines.join("\n")}\n"
     end
 
     def placeholder_image?
       @record['file'] == 'b3c3cb40-63aa-4477-b6e3-b8b03ebccb75.png'
-    end
-
-    def empty_value?(value)
-      Utils.empty_value?(value)
     end
 
     def render_video

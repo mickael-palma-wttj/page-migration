@@ -217,7 +217,7 @@ module PageMigration
           
           if value.is_a?(Hash) && value.key?(@language)
             localized = value[@language]
-            unless empty_value?(localized)
+            unless Utils.empty_value?(localized)
               item_buffer << render_localized_value_to_string(key, localized)
             end
           elsif !value.is_a?(Hash)
@@ -237,10 +237,6 @@ module PageMigration
       else
         "- **#{key.capitalize}:** #{localized}\n"
       end
-    end
-
-    def empty_value?(value)
-      Utils.empty_value?(value)
     end
   end
 end

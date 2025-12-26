@@ -40,7 +40,7 @@ module PageMigration
         node_dir = current_path
       else
         node_name = tree_page["slug"].split("/").last || tree_page["id"].to_s
-        node_dir = File.join(current_path, sanitize_filename(node_name))
+        node_dir = File.join(current_path, Utils.sanitize_filename(node_name))
       end
 
       if should_render
@@ -125,7 +125,7 @@ module PageMigration
     def render_property(key, value, buffer)
       if value.is_a?(Hash) && value.key?(@language)
         localized = value[@language]
-        render_localized_value(key, localized, buffer) unless empty_value?(localized)
+        render_localized_value(key, localized, buffer) unless Utils.empty_value?(localized)
       elsif !value.is_a?(Hash)
         buffer << "- **#{key.capitalize}:** #{value}\n"
       end
@@ -139,14 +139,6 @@ module PageMigration
       else
         "- **#{key.capitalize}:** #{localized}\n"
       end
-    end
-
-    def empty_value?(value)
-      Utils.empty_value?(value)
-    end
-
-    def sanitize_filename(name)
-      Utils.sanitize_filename(name)
     end
   end
 end

@@ -46,7 +46,7 @@ module PageMigration
 
       def generate_exports(org_data, tree_data)
         FileUtils.mkdir_p(@output_dir)
-        org_name = sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data['name'])
 
         @languages.each do |lang|
           generate_language_export(org_data, tree_data, org_name, lang)
@@ -56,7 +56,7 @@ module PageMigration
       end
 
       def generate_tree_exports(org_data, tree_data)
-        org_name = sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data['name'])
         company_dir = File.join(@output_dir, "#{@org_ref}_#{org_name}")
 
         @languages.each do |lang|
@@ -79,10 +79,6 @@ module PageMigration
         File.write(filepath, content)
 
         puts "  ✅ Generated: #{filepath}"
-      end
-
-      def sanitize_filename(name)
-        Utils.sanitize_filename(name)
       end
 
       def print_summary(org_data)

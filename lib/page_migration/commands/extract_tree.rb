@@ -17,7 +17,7 @@ module PageMigration
 
         if @output.nil?
           org_data = JSON.parse(data)["organization"]
-          slug = sanitize_filename(org_data["name"])
+          slug = Utils.sanitize_filename(org_data["name"])
           @output = "tmp/query_result/#{@org_ref}_#{slug}/tree.json"
         end
 
@@ -27,10 +27,6 @@ module PageMigration
       end
 
       private
-
-      def sanitize_filename(name)
-        Utils.sanitize_filename(name)
-      end
 
       def fetch_data
         conn = Database.connect

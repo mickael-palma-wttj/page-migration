@@ -61,7 +61,7 @@ module PageMigration
       end
 
       def find_exported_txt(org_data)
-        org_name = sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data['name'])
         # Check new location in tmp folder
         path = "tmp/query_result/#{@org_ref}_#{org_name}/contenu_#{@language}.txt"
         return path if File.exist?(path)
@@ -80,7 +80,7 @@ module PageMigration
       end
 
       def build_output_root(org_data)
-        org_name = sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data['name'])
         root = "tmp/generated_assets/#{@org_ref}_#{org_name}"
         FileUtils.mkdir_p(root)
         root
@@ -142,15 +142,11 @@ module PageMigration
       end
 
       def find_exported_md(org_data)
-        org_name = sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data['name'])
         path = File.join(EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
         return path if File.exist?(path)
 
         Dir.glob(File.join(EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
-      end
-
-      def sanitize_filename(name)
-        Utils.sanitize_filename(name)
       end
 
       def debug_log(message)

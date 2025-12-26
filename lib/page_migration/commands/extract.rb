@@ -43,17 +43,13 @@ module PageMigration
       private
 
       def build_default_output(org_data)
-        slug = sanitize(org_data["name"])
+        slug = Utils.sanitize_filename(org_data["name"])
         case @format
         when "json"
           "tmp/query_result/#{@org_ref}_#{slug}/query.json"
         when "text"
           "tmp/query_result/#{@org_ref}_#{slug}/contenu_#{@language}.txt"
         end
-      end
-
-      def sanitize(name)
-        Utils.sanitize_filename(name)
       end
 
       def write_json(data)
