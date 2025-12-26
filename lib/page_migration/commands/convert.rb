@@ -50,7 +50,7 @@ module PageMigration
       end
 
       def generate_filename(org)
-        slug = org["name"].downcase.gsub(/[^a-z0-9]+/, "_").gsub(/(^_|_$)/, "")
+        slug = Utils.sanitize_filename(org["name"])
         "#{org["reference"].strip}_#{slug}.md"
       end
     end

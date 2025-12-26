@@ -150,7 +150,7 @@ module PageMigration
       end
 
       def sanitize_filename(name)
-        name.downcase.gsub(/[^a-z0-9]+/, '_').gsub(/^_|_$/, '')
+        Utils.sanitize_filename(name)
       end
 
       def debug_log(message)

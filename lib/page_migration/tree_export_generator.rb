@@ -142,11 +142,11 @@ module PageMigration
     end
 
     def empty_value?(value)
-      value.nil? || value.to_s.strip.empty?
+      Utils.empty_value?(value)
     end
 
     def sanitize_filename(name)
-      name.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/^_|_$/, "")
+      Utils.sanitize_filename(name)
     end
   end
 end

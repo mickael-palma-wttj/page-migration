@@ -240,7 +240,7 @@ module PageMigration
     end
 
     def empty_value?(value)
-      value.nil? || value.to_s.strip.empty?
+      Utils.empty_value?(value)
     end
   end
 end
