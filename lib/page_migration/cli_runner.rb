@@ -61,10 +61,13 @@ module PageMigration
       parser = build_extract_parser
       parser.parse!(@args)
 
-      org_ref = @args.shift
-      abort "Error: Organization reference required\n\n#{parser}" unless org_ref
+      org_ref = validate_org_ref(@args.shift, parser)
+      @options[:format] = Validator.validate_format!(@options[:format])
+      @options[:language] = Validator.validate_language!(@options[:language])
 
       Commands::Extract.new(org_ref, **@options).call
+    rescue ValidationError => e
+      abort "Error: #{e.message}"
     end
 
     def build_extract_parser
@@ -81,10 +84,11 @@ module PageMigration
       parser = build_tree_parser
       parser.parse!(@args)
 
-      org_ref = @args.shift
-      abort "Error: Organization reference required\n\n#{parser}" unless org_ref
+      org_ref = validate_org_ref(@args.shift, parser)
 
       Commands::ExtractTree.new(org_ref, **@options).call
+    rescue ValidationError => e
+      abort "Error: #{e.message}"
     end
 
     def build_tree_parser
@@ -102,13 +106,13 @@ module PageMigration
       parser = build_export_parser
       parser.parse!(@args)
 
-      org_ref = @args.shift
-      abort "Error: Organization reference required\n\n#{parser}" unless org_ref
+      org_ref = validate_org_ref(@args.shift, parser)
+      languages = @options[:languages]&.split(",")
+      @options[:languages] = Validator.validate_languages!(languages)
 
-      options = @options.dup
-      options[:languages] = options[:languages].split(",") if options[:languages].is_a?(String)
-
-      Commands::Export.new(org_ref, **options.compact).call
+      Commands::Export.new(org_ref, **@options.compact).call
+    rescue ValidationError => e
+      abort "Error: #{e.message}"
     end
 
     def build_export_parser
@@ -151,20 +155,23 @@ module PageMigration
       parser = build_run_parser
       parser.parse!(@args)
 
-      org_ref = @args.shift
-      abort "Error: Organization reference required\n\n#{parser}" unless org_ref
+      org_ref = validate_org_ref(@args.shift, parser)
 
       Commands::Run.new(org_ref, **@options).call
+    rescue ValidationError => e
+      abort "Error: #{e.message}"
     end
 
     def run_migrate
       parser = build_migrate_parser
       parser.parse!(@args)
 
-      org_ref = @args.shift
-      abort "Error: Organization reference required" unless org_ref
+      org_ref = validate_org_ref(@args.shift, parser)
+      @options[:language] = Validator.validate_language!(@options[:language])
 
       Commands::Migrate.new(org_ref, **@options).call
+    rescue ValidationError => e
+      abort "Error: #{e.message}"
     end
 
     def build_migrate_parser
@@ -180,6 +187,12 @@ module PageMigration
     def show_help(error = nil)
       puts "Error: #{error}\n\n" if error
       puts HELP_TEXT
+    end
+
+    def validate_org_ref(org_ref, parser)
+      Validator.validate_org_ref!(org_ref)
+    rescue ValidationError => e
+      abort "Error: #{e.message}\n\n#{parser}"
     end
   end
 end
