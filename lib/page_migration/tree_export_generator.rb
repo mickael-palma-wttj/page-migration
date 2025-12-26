@@ -5,14 +5,16 @@ require "fileutils"
 module PageMigration
   # Generates a hierarchical directory structure with one Markdown file per page
   class TreeExportGenerator
+    include ContentRenderer
+
     def initialize(org_data, tree_data, language:, output_dir:, custom_only: false)
       @org = org_data
       @tree = tree_data
       @language = language
       @output_dir = output_dir
       @custom_only = custom_only
-      @pages_by_id = build_pages_index
-      @tree_pages = build_tree_index
+      @pages_by_id = build_pages_index(@org)
+      @tree_pages = build_tree_index(@tree)
     end
 
     def generate
@@ -53,22 +55,9 @@ module PageMigration
       end
 
       # Always traverse children to find nested pages (even if parent is not rendered)
-      find_children(tree_page["id"]).each do |child|
+      find_children(@tree, tree_page["id"]).each do |child|
         export_node(child, node_dir)
       end
-    end
-
-    def find_children(parent_id)
-      @tree["page_tree"].select { |p| p["ancestry"] == parent_id.to_s }
-    end
-
-    def build_pages_index
-      pages = @org["pages"] || []
-      pages.each_with_object({}) { |p, h| h[p["id"]] = p }
-    end
-
-    def build_tree_index
-      (@tree["page_tree"] || []).each_with_object({}) { |p, h| h[p["id"]] = p }
     end
 
     def render_page_content(tree_page, page_data)
@@ -99,45 +88,18 @@ module PageMigration
 
     def render_items(items, buffer)
       items.each do |item|
-        render_item_record(item, buffer)
-        render_item_content(item, buffer)
-      end
-    end
+        if item["record"]
+          record_md = RecordRenderer.new(item["record"], item["record_type"]).render
+          buffer << record_md if record_md
+        end
 
-    def render_item_record(item, buffer)
-      return unless item["record"]
+        properties = item["properties"]
+        next if properties.nil? || properties.empty?
 
-      record_md = RecordRenderer.new(item["record"], item["record_type"]).render
-      buffer << record_md if record_md
-    end
-
-    def render_item_content(item, buffer)
-      properties = item["properties"]
-      return if properties.nil? || properties.empty?
-
-      properties.each do |key, value|
-        next if key == "settings" || value.nil?
-
-        render_property(key, value, buffer)
-      end
-    end
-
-    def render_property(key, value, buffer)
-      if value.is_a?(Hash) && value.key?(@language)
-        localized = value[@language]
-        render_localized_value(key, localized, buffer) unless Utils.empty_value?(localized)
-      elsif !value.is_a?(Hash)
-        buffer << "- **#{key.capitalize}:** #{value}\n"
-      end
-    end
-
-    def render_localized_value(key, localized, buffer)
-      buffer << if key == "body" && localized.to_s.length > 100
-        "\n#{localized}\n\n"
-      elsif localized.to_s.include?("\n")
-        "- **#{key.capitalize}:**\n\n#{localized}\n\n"
-      else
-        "- **#{key.capitalize}:** #{localized}\n"
+        properties.each do |key, value|
+          rendered = render_property(key, value, @language)
+          buffer << rendered if rendered
+        end
       end
     end
   end

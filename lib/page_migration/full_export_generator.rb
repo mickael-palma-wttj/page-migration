@@ -5,6 +5,8 @@ require 'json'
 module PageMigration
   # Generates a complete Markdown export with tree view and all page content by language
   class FullExportGenerator
+    include ContentRenderer
+
     SUPPORTED_LANGUAGES = %w[fr en cs sk].freeze
 
     def initialize(org_data, tree_data, language:, custom_only: false)
@@ -13,8 +15,8 @@ module PageMigration
       @language = language
       @custom_only = custom_only
       @buffer = []
-      @pages_by_id = build_pages_index
-      @tree_pages = build_tree_index
+      @pages_by_id = build_pages_index(@org)
+      @tree_pages = build_tree_index(@tree)
     end
 
     def generate
@@ -25,15 +27,6 @@ module PageMigration
     end
 
     private
-
-    def build_pages_index
-      pages = @org['pages'] || []
-      pages.each_with_object({}) { |p, h| h[p['id']] = p }
-    end
-
-    def build_tree_index
-      (@tree['page_tree'] || []).each_with_object({}) { |p, h| h[p['id']] = p }
-    end
 
     def render_header
       title_suffix = @custom_only ? ' (Custom Pages Only)' : ''
@@ -92,7 +85,7 @@ module PageMigration
         @buffer << "#{prefix}#{connector}#{status} #{page['slug']}#{ref_tag}\n"
       end
 
-      children = find_children(page['id'])
+      children = tree_children(page['id'])
       children.each_with_index do |child, idx|
         # If we didn't render the current node, we don't indent the children
         # but this might look weird. Actually, if we want to respect hierarchy,
@@ -104,8 +97,8 @@ module PageMigration
       end
     end
 
-    def find_children(parent_id)
-      @tree['page_tree'].select { |p| p['ancestry'] == parent_id.to_s }
+    def tree_children(parent_id)
+      find_children(@tree, parent_id)
     end
 
     def filtered_tree
@@ -162,7 +155,7 @@ module PageMigration
         render_page(tree_page, page, heading_level) if page
       end
 
-      children = find_children(tree_page['id'])
+      children = tree_children(tree_page['id'])
       children.each { |child| render_page_with_children(child, heading_level + 1) }
     end
 
@@ -204,7 +197,7 @@ module PageMigration
 
     def render_item_to_string(item)
       item_buffer = []
-      
+
       if item['record']
         record_md = RecordRenderer.new(item['record'], item['record_type']).render
         item_buffer << record_md if record_md
@@ -213,30 +206,12 @@ module PageMigration
       properties = item['properties']
       if properties && !properties.empty?
         properties.each do |key, value|
-          next if key == 'settings' || value.nil?
-          
-          if value.is_a?(Hash) && value.key?(@language)
-            localized = value[@language]
-            unless Utils.empty_value?(localized)
-              item_buffer << render_localized_value_to_string(key, localized)
-            end
-          elsif !value.is_a?(Hash)
-            item_buffer << "- **#{key.capitalize}:** #{value}\n"
-          end
+          rendered = render_property(key, value, @language)
+          item_buffer << rendered if rendered
         end
       end
 
       item_buffer.empty? ? nil : item_buffer.join
-    end
-
-    def render_localized_value_to_string(key, localized)
-      if key == 'body' && localized.to_s.length > 100
-        "\n#{localized}\n\n"
-      elsif localized.to_s.include?("\n")
-        "- **#{key.capitalize}:**\n\n#{localized}\n\n"
-      else
-        "- **#{key.capitalize}:** #{localized}\n"
-      end
     end
   end
 end
