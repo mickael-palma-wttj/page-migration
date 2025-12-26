@@ -4,10 +4,10 @@ module PageMigration
   module Support
     # Centralized file discovery for query results and exports
     class FileDiscovery
-      QUERY_RESULT_DIR = 'tmp/query_result'
+      QUERY_RESULT_DIR = "tmp/query_result"
 
       def self.find_query_json(org_ref)
-        pattern = File.join(QUERY_RESULT_DIR, "#{org_ref}_*", 'query.json')
+        pattern = File.join(QUERY_RESULT_DIR, "#{org_ref}_*", "query.json")
         Dir.glob(pattern).first
       end
 
@@ -16,7 +16,7 @@ module PageMigration
       end
 
       def self.find_latest_query_json
-        pattern = File.join(QUERY_RESULT_DIR, '*', 'query.json')
+        pattern = File.join(QUERY_RESULT_DIR, "*", "query.json")
         Dir.glob(pattern).max_by { |f| File.mtime(f) }
       end
 

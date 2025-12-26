@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-require 'json'
-require 'set'
+require "json"
 
 module PageMigration
   module Generators
     # Generates a plain text export of all content for an organization
     class TextContentGenerator
-      def initialize(org_data, language: 'fr')
+      def initialize(org_data, language: "fr")
         @org = org_data
         @language = language
         @buffer = []
@@ -24,13 +23,13 @@ module PageMigration
 
       def render_header
         @buffer << "=" * 80
-        @buffer << "CONTENU #{@language.upcase == 'FR' ? 'FRANÇAIS' : 'ENGLISH'} - #{@org['name']} (#{@org['reference']})"
+        @buffer << "CONTENU #{(@language.upcase == "FR") ? "FRANÇAIS" : "ENGLISH"} - #{@org["name"]} (#{@org["reference"]})"
         @buffer << "=" * 80
         @buffer << "\n"
       end
 
       def render_pages
-        pages = @org['pages'] || []
+        pages = @org["pages"] || []
         pages.each_with_index do |page, idx|
           render_page(page, idx + 1, pages.length)
         end
@@ -39,11 +38,11 @@ module PageMigration
       def render_page(page, index, total)
         @buffer << "\n"
         @buffer << "█" * 80
-        @buffer << "PAGE #{index}/#{total} : #{page['name'] || page['slug'].upcase}"
+        @buffer << "PAGE #{index}/#{total} : #{page["name"] || page["slug"].upcase}"
         @buffer << "█" * 80
         @buffer << "\n"
 
-        blocks = page['content_blocks'] || []
+        blocks = page["content_blocks"] || []
         blocks.each do |block|
           render_block(block)
         end
@@ -53,24 +52,24 @@ module PageMigration
       end
 
       def render_block(block)
-        items = block['content_items'] || []
+        items = block["content_items"] || []
         items.each do |item|
           render_item(item)
         end
       end
 
       def render_item(item)
-        props = item['properties'] || {}
+        props = item["properties"] || {}
         extract_text_from_properties(props)
 
-        render_record(item['record'], item['record_type']) if item['record']
+        render_record(item["record"], item["record_type"]) if item["record"]
       end
 
       def extract_text_from_properties(props)
         %w[title subtitle body content description name value].each do |key|
           val = props[key]
           if val.is_a?(Hash)
-            text = val[@language] || val['fr'] || val['en']
+            text = val[@language] || val["fr"] || val["en"]
             append_text(text) if text
           elsif val.is_a?(String) && !val.empty?
             append_text(val)
@@ -80,15 +79,15 @@ module PageMigration
 
       def render_record(record, type)
         case type
-        when 'Office'
-          append_text(record['name'])
-          address = [record['address'], record['city'], record['country_code']].compact.join(', ')
+        when "Office"
+          append_text(record["name"])
+          address = [record["address"], record["city"], record["country_code"]].compact.join(", ")
           append_text(address) unless address.empty?
-        when 'Organization'
-          append_text(record['name'])
-        when 'Cms::Image', 'Cms::Video'
-          append_text(record['name']) if record['name']
-          append_text(record['description']) if record['description']
+        when "Organization"
+          append_text(record["name"])
+        when "Cms::Image", "Cms::Video"
+          append_text(record["name"]) if record["name"]
+          append_text(record["description"]) if record["description"]
         end
       end
 
@@ -106,7 +105,7 @@ module PageMigration
       end
 
       def normalize_for_dedup(text)
-        text.downcase.gsub(/\s+/, ' ').strip
+        text.downcase.gsub(/\s+/, " ").strip
       end
     end
   end

@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-require 'json'
-require 'fileutils'
+require "json"
+require "fileutils"
 
 module PageMigration
   module Commands
     # Command to generate assets using Dust API based on prompts
     class Migrate
-      EXPORT_DIR = 'tmp/export'
+      EXPORT_DIR = "tmp/export"
 
-      def initialize(org_ref, language: 'fr', debug: false)
+      def initialize(org_ref, language: "fr", debug: false)
         @org_ref = org_ref
         @language = language
         @debug = debug
 
         @client = PageMigration::Dust::Client.new(
-          ENV.fetch('DUST_WORKSPACE_ID'),
-          ENV.fetch('DUST_API_KEY'),
+          ENV.fetch("DUST_WORKSPACE_ID"),
+          ENV.fetch("DUST_API_KEY"),
           debug: @debug
         )
 
-        dust_runner = PageMigration::Dust::Runner.new(@client, ENV.fetch('DUST_AGENT_ID'), debug: @debug)
+        dust_runner = PageMigration::Dust::Runner.new(@client, ENV.fetch("DUST_AGENT_ID"), debug: @debug)
         @processor = PageMigration::Services::PromptProcessor.new(@client, {}, dust_runner, language: @language, debug: @debug)
         @prompt_runner = PageMigration::Services::PromptRunner.new(@processor, debug: @debug)
       end
@@ -46,7 +46,7 @@ module PageMigration
       def load_org_data
         input_file = find_input_file
         data = Support::JsonLoader.load(input_file).first
-        raise PageMigration::Error, 'No organization data found' unless data
+        raise PageMigration::Error, "No organization data found" unless data
 
         data
       end
@@ -55,13 +55,13 @@ module PageMigration
         txt_file = find_exported_txt(org_data)
         return txt_file if txt_file && File.exist?(txt_file)
 
-        puts '⚠️ Exported Text not found. Running extract --format text first...'
-        Extract.new(@org_ref, format: 'text', language: @language).call
-        find_exported_txt(org_data) || raise(PageMigration::Error, 'Text extraction failed')
+        puts "⚠️ Exported Text not found. Running extract --format text first..."
+        Extract.new(@org_ref, format: "text", language: @language).call
+        find_exported_txt(org_data) || raise(PageMigration::Error, "Text extraction failed")
       end
 
       def find_exported_txt(org_data)
-        org_name = Utils.sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data["name"])
         Support::FileDiscovery.find_text_content(@org_ref, org_name, @language)
       end
 
@@ -69,13 +69,13 @@ module PageMigration
         md_file = find_exported_md(org_data)
         return md_file if md_file && File.exist?(md_file)
 
-        puts '⚠️ Exported Markdown not found. Running export first...'
+        puts "⚠️ Exported Markdown not found. Running export first..."
         Export.new(@org_ref, languages: [@language]).call
-        find_exported_md(org_data) || raise(PageMigration::Error, 'Export failed')
+        find_exported_md(org_data) || raise(PageMigration::Error, "Export failed")
       end
 
       def build_output_root(org_data)
-        org_name = Utils.sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data["name"])
         root = "tmp/generated_assets/#{@org_ref}_#{org_name}"
         FileUtils.mkdir_p(root)
         root
@@ -86,8 +86,8 @@ module PageMigration
         analysis_result = run_analysis(summary, output_root)
         debug_log "Brand analysis complete" if analysis_result
 
-        prompts = Dir.glob('prompts/migration/**/*.prompt.md').sort
-        prompts.reject! { |p| p.include?('file_analysis.prompt.md') }
+        prompts = Dir.glob("prompts/migration/**/*.prompt.md").sort
+        prompts.reject! { |p| p.include?("file_analysis.prompt.md") }
 
         debug_log "Found #{prompts.length} prompts to process"
         prompts.each { |p| debug_log "  - #{p}" } if @debug
@@ -98,14 +98,14 @@ module PageMigration
       end
 
       def run_analysis(summary, output_root)
-        path = 'prompts/migration/file_analysis.prompt.md'
+        path = "prompts/migration/file_analysis.prompt.md"
         return nil unless File.exist?(path)
 
         @processor.process(path, summary, output_root)
       end
 
       def find_exported_md(org_data)
-        org_name = Utils.sanitize_filename(org_data['name'])
+        org_name = Utils.sanitize_filename(org_data["name"])
         path = File.join(EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
         return path if File.exist?(path)
 

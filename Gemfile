@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-gem 'dotenv'
-gem 'pg'
-gem 'ruby-progressbar'
-gem 'zeitwerk'
+gem "dotenv"
+gem "pg"
+gem "ruby-progressbar"
+gem "zeitwerk"
 
 group :development do
-  gem 'rubocop', require: false
+  gem "rubocop", require: false
 end

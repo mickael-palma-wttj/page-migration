@@ -69,7 +69,7 @@ module PageMigration
 
                             -- Polymorphic record resolution: fetch related record data
                             -- based on record_type (Cms::Image, Cms::Video, Office, etc.)
-                            'record', CASE#{' '}
+                            'record', CASE#{" "}
                               WHEN c.record_type = 'Cms::Image' THEN (
                                 SELECT json_build_object(
                                   'file', img.file,

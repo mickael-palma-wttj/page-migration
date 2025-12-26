@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ruby-progressbar'
+require "ruby-progressbar"
 
 module PageMigration
   module Services
@@ -34,9 +34,9 @@ module PageMigration
       def run_parallel(prompts, summary, output_root, additional_instructions)
         puts "\nProcessing #{prompts.length} prompts in parallel..."
         progress = ProgressBar.create(
-          title: 'Migration',
+          title: "Migration",
           total: prompts.length,
-          format: '%t: %c/%C |%B| %p%% %e'
+          format: "%t: %c/%C |%B| %p%% %e"
         )
 
         queue = Queue.new

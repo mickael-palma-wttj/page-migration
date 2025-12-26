@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'optparse'
+require "optparse"
 
 module PageMigration
   # CLI parser and dispatcher
@@ -46,7 +46,7 @@ module PageMigration
     end
 
     def call
-      return show_help if @args.empty? || @args.first == '-h' || @args.first == '--help'
+      return show_help if @args.empty? || @args.first == "-h" || @args.first == "--help"
 
       command = @args.shift
       return show_help("Unknown command: #{command}") unless COMMANDS.include?(command)
@@ -68,11 +68,11 @@ module PageMigration
 
     def build_extract_parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: page_migration extract <org_reference> [options]'
-        opts.on('-o', '--output FILE', 'Output file') { |v| @options[:output] = v }
-        opts.on('-f', '--format FORMAT', 'Output format: json (default) or text') { |v| @options[:format] = v }
-        opts.on('-l', '--language LANG', 'Language for text format (default: fr)') { |v| @options[:language] = v }
-        opts.on('-h', '--help', 'Show this help') { |_| puts opts and exit }
+        opts.banner = "Usage: page_migration extract <org_reference> [options]"
+        opts.on("-o", "--output FILE", "Output file") { |v| @options[:output] = v }
+        opts.on("-f", "--format FORMAT", "Output format: json (default) or text") { |v| @options[:format] = v }
+        opts.on("-l", "--language LANG", "Language for text format (default: fr)") { |v| @options[:language] = v }
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end
 
@@ -88,9 +88,9 @@ module PageMigration
 
     def build_tree_parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: page_migration tree <org_ref> [options]'
-        opts.on('-o', '--output FILE', 'Output JSON file') { |f| @options[:output] = f }
-        opts.on('-h', '--help', 'Show this help') do
+        opts.banner = "Usage: page_migration tree <org_ref> [options]"
+        opts.on("-o", "--output FILE", "Output JSON file") { |f| @options[:output] = f }
+        opts.on("-h", "--help", "Show this help") do
           puts opts
           exit
         end
@@ -105,23 +105,23 @@ module PageMigration
       abort "Error: Organization reference required\n\n#{parser}" unless org_ref
 
       options = @options.dup
-      options[:languages] = options[:languages].split(',') if options[:languages].is_a?(String)
+      options[:languages] = options[:languages].split(",") if options[:languages].is_a?(String)
 
       Commands::Export.new(org_ref, **options.compact).call
     end
 
     def build_export_parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: page_migration export <org_ref> [options]'
-        opts.on('-o', '--output-dir DIR', 'Output directory') { |d| @options[:output_dir] = d }
-        opts.on('-l', '--languages LANGS', 'Languages (comma-separated: fr,en,cs)') { |l| @options[:languages] = l }
-        opts.on('-c', '--custom-only', 'Export only custom pages (exclude standard tabs)') do
+        opts.banner = "Usage: page_migration export <org_ref> [options]"
+        opts.on("-o", "--output-dir DIR", "Output directory") { |d| @options[:output_dir] = d }
+        opts.on("-l", "--languages LANGS", "Languages (comma-separated: fr,en,cs)") { |l| @options[:languages] = l }
+        opts.on("-c", "--custom-only", "Export only custom pages (exclude standard tabs)") do
           @options[:custom_only] = true
         end
-        opts.on('-t', '--tree', 'Export as a directory tree instead of a single file') do
+        opts.on("-t", "--tree", "Export as a directory tree instead of a single file") do
           @options[:tree] = true
         end
-        opts.on('-h', '--help', 'Show this help') do
+        opts.on("-h", "--help", "Show this help") do
           puts opts
           exit
         end
@@ -139,10 +139,10 @@ module PageMigration
 
     def build_convert_parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: page_migration convert [org_ref] [options]'
-        opts.on('-i', '--input FILE', 'Input JSON file') { |v| @options[:input] = v }
-        opts.on('-o', '--output-dir DIR', 'Output directory') { |v| @options[:output_dir] = v }
-        opts.on('-h', '--help', 'Show this help') { |_| puts opts and exit }
+        opts.banner = "Usage: page_migration convert [org_ref] [options]"
+        opts.on("-i", "--input FILE", "Input JSON file") { |v| @options[:input] = v }
+        opts.on("-o", "--output-dir DIR", "Output directory") { |v| @options[:output_dir] = v }
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end
 
@@ -161,17 +161,17 @@ module PageMigration
       parser.parse!(@args)
 
       org_ref = @args.shift
-      abort 'Error: Organization reference required' unless org_ref
+      abort "Error: Organization reference required" unless org_ref
 
       Commands::Migrate.new(org_ref, **@options).call
     end
 
     def build_migrate_parser
       OptionParser.new do |opts|
-        opts.banner = 'Usage: page_migration migrate <org_reference> [options]'
-        opts.on('-l', '--language LANG', 'Language for content generation (default: fr)') { |v| @options[:language] = v }
-        opts.on('-d', '--debug', 'Enable debug mode with detailed output') { @options[:debug] = true }
-        opts.on('-h', '--help', 'Show this help') { |_| puts opts and exit }
+        opts.banner = "Usage: page_migration migrate <org_reference> [options]"
+        opts.on("-l", "--language LANG", "Language for content generation (default: fr)") { |v| @options[:language] = v }
+        opts.on("-d", "--debug", "Enable debug mode with detailed output") { @options[:debug] = true }
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end
 
