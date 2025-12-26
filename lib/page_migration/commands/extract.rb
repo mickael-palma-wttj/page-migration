@@ -58,7 +58,7 @@ module PageMigration
       end
 
       def write_text(org_data)
-        generator = TextContentGenerator.new(org_data, language: @language)
+        generator = Generators::TextContentGenerator.new(org_data, language: @language)
         content = generator.generate
         File.write(@output, content)
         puts "✅ Text content extracted to: #{@output}"

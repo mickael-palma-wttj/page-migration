@@ -60,7 +60,7 @@ module PageMigration
 
         @languages.each do |lang|
           lang_dir = File.join(company_dir, lang)
-          generator = TreeExportGenerator.new(org_data, tree_data, language: lang, output_dir: lang_dir, custom_only: @custom_only)
+          generator = Generators::TreeExportGenerator.new(org_data, tree_data, language: lang, output_dir: lang_dir, custom_only: @custom_only)
           generator.generate
           puts "  ✅ Generated tree export: #{lang_dir}"
         end
@@ -69,7 +69,7 @@ module PageMigration
       end
 
       def generate_language_export(org_data, tree_data, org_name, lang)
-        generator = FullExportGenerator.new(org_data, tree_data, language: lang, custom_only: @custom_only)
+        generator = Generators::FullExportGenerator.new(org_data, tree_data, language: lang, custom_only: @custom_only)
         content = generator.generate
 
         suffix = @custom_only ? '_custom' : ''
