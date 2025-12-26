@@ -9,6 +9,7 @@ module PageMigration
     # Processes a single prompt file and generates the output using Dust API
     class PromptProcessor
       include Loggable
+
       PROMPTS_DIR = File.expand_path("../prompts", __dir__)
       MIGRATION_PROMPTS_DIR = File.join(PROMPTS_DIR, "migration")
 
