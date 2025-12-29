@@ -42,12 +42,12 @@ module PageMigration
       private
 
       def build_default_output(org_data)
-        slug = Utils.sanitize_filename(org_data["name"])
+        base_dir = Config.output_dir(@org_ref, org_data["name"])
         case @format
         when "json"
-          "tmp/query_result/#{@org_ref}_#{slug}/query.json"
+          File.join(base_dir, "query.json")
         when "text"
-          "tmp/query_result/#{@org_ref}_#{slug}/contenu_#{@language}.txt"
+          File.join(base_dir, "contenu_#{@language}.txt")
         end
       end
 

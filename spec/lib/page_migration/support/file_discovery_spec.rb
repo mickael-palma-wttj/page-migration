@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe PageMigration::Support::FileDiscovery do
-  let(:query_result_dir) { PageMigration::Config::QUERY_RESULT_DIR }
+  let(:output_root) { PageMigration::Config::OUTPUT_ROOT }
 
   describe ".find_query_json" do
     context "when file exists" do
       before do
-        allow(Dir).to receive(:glob).and_return(["tmp/query_result/Pg4eV6k_company/query.json"])
+        allow(Dir).to receive(:glob).and_return(["tmp/Pg4eV6k_company/query.json"])
       end
 
       it "returns the first matching file" do
-        expect(described_class.find_query_json("Pg4eV6k")).to eq("tmp/query_result/Pg4eV6k_company/query.json")
+        expect(described_class.find_query_json("Pg4eV6k")).to eq("tmp/Pg4eV6k_company/query.json")
       end
     end
 
@@ -50,7 +50,7 @@ RSpec.describe PageMigration::Support::FileDiscovery do
 
   describe ".find_latest_query_json" do
     context "when files exist" do
-      let(:files) { ["tmp/query_result/org1/query.json", "tmp/query_result/org2/query.json"] }
+      let(:files) { ["tmp/org1_company/query.json", "tmp/org2_company/query.json"] }
 
       before do
         allow(Dir).to receive(:glob).and_return(files)
@@ -95,19 +95,19 @@ RSpec.describe PageMigration::Support::FileDiscovery do
 
       it "returns the exact path" do
         result = described_class.find_text_content("Pg4eV6k", "company", "fr")
-        expect(result).to eq("tmp/query_result/Pg4eV6k_company/contenu_fr.txt")
+        expect(result).to eq("tmp/Pg4eV6k_company/contenu_fr.txt")
       end
     end
 
     context "when exact path does not exist but glob finds file" do
       before do
         allow(File).to receive(:exist?).and_return(false)
-        allow(Dir).to receive(:glob).and_return(["tmp/query_result/Pg4eV6k_other/contenu_fr.txt"])
+        allow(Dir).to receive(:glob).and_return(["tmp/Pg4eV6k_other/contenu_fr.txt"])
       end
 
       it "returns the globbed path" do
         result = described_class.find_text_content("Pg4eV6k", "company", "fr")
-        expect(result).to eq("tmp/query_result/Pg4eV6k_other/contenu_fr.txt")
+        expect(result).to eq("tmp/Pg4eV6k_other/contenu_fr.txt")
       end
     end
   end

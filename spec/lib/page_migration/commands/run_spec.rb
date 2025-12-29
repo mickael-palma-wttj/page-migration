@@ -21,7 +21,7 @@ RSpec.describe PageMigration::Commands::Run do
 
     it "runs convert command with extract output" do
       expect(PageMigration::Commands::Convert).to receive(:new)
-        .with(input: "tmp/output.json", output_dir: PageMigration::Commands::Convert::DEFAULT_OUTPUT_DIR)
+        .with(input: "tmp/output.json", output_dir: nil)
       expect { command.call }.to output.to_stdout
     end
 

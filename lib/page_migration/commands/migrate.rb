@@ -57,11 +57,11 @@ module PageMigration
           raise PageMigration::Error, "Analysis prompt not found: #{ANALYSIS_PROMPT}"
         end
 
-        FileUtils.mkdir_p(Config::ANALYSIS_DIR)
-        org_name = Utils.sanitize_filename(org_data["name"])
-        output_file = File.join(Config::ANALYSIS_DIR, "#{@org_ref}_#{org_name}_analysis.md")
+        output_dir = Config.output_dir(@org_ref, org_data["name"])
+        FileUtils.mkdir_p(output_dir)
+        output_file = File.join(output_dir, "analysis.md")
 
-        result = @processor.process(ANALYSIS_PROMPT, content_summary, Config::ANALYSIS_DIR, save: false)
+        result = @processor.process(ANALYSIS_PROMPT, content_summary, output_dir, save: false)
 
         if result
           File.write(output_file, strip_markdown_fences(result))
@@ -104,8 +104,7 @@ module PageMigration
       end
 
       def build_output_root(org_data)
-        org_name = Utils.sanitize_filename(org_data["name"])
-        root = "tmp/generated_assets/#{@org_ref}_#{org_name}"
+        root = Config.output_dir(@org_ref, org_data["name"])
         FileUtils.mkdir_p(root)
         root
       end
@@ -134,11 +133,12 @@ module PageMigration
       end
 
       def find_exported_md(org_data)
+        output_dir = Config.output_dir(@org_ref, org_data["name"])
         org_name = Utils.sanitize_filename(org_data["name"])
-        path = File.join(Config::EXPORT_DIR, "#{@org_ref}_#{org_name}_#{@language}.md")
+        path = File.join(output_dir, "#{@org_ref}_#{org_name}_#{@language}.md")
         return path if File.exist?(path)
 
-        Dir.glob(File.join(Config::EXPORT_DIR, "#{@org_ref}_*_#{@language}.md")).first
+        Dir.glob(File.join(output_dir, "#{@org_ref}_*_#{@language}.md")).first
       end
 
       def strip_markdown_fences(text)

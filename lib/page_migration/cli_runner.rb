@@ -66,7 +66,7 @@ module PageMigration
       @options[:language] = Validator.validate_language!(@options[:language])
 
       Commands::Extract.new(org_ref, **@options).call
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}"
     end
 
@@ -87,7 +87,7 @@ module PageMigration
       org_ref = validate_org_ref(@args.shift, parser)
 
       Commands::ExtractTree.new(org_ref, **@options).call
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}"
     end
 
@@ -111,7 +111,7 @@ module PageMigration
       @options[:languages] = Validator.validate_languages!(languages)
 
       Commands::Export.new(org_ref, **@options.compact).call
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}"
     end
 
@@ -158,7 +158,7 @@ module PageMigration
       org_ref = validate_org_ref(@args.shift, parser)
 
       Commands::Run.new(org_ref, **@options).call
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}"
     end
 
@@ -177,7 +177,7 @@ module PageMigration
       @options[:language] = Validator.validate_language!(@options[:language])
 
       Commands::Migrate.new(org_ref, **@options).call
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}"
     end
 
@@ -198,7 +198,7 @@ module PageMigration
 
     def validate_org_ref(org_ref, parser)
       Validator.validate_org_ref!(org_ref)
-    rescue ValidationError => e
+    rescue Errors::ValidationError => e
       abort "Error: #{e.message}\n\n#{parser}"
     end
   end

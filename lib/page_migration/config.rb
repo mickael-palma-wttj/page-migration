@@ -13,9 +13,11 @@ module PageMigration
     WORKER_COUNT = ENV.fetch("WORKER_COUNT", 5).to_i
 
     # Output directories
-    EXPORT_DIR = "tmp/export"
-    ANALYSIS_DIR = "tmp/analysis"
-    QUERY_RESULT_DIR = "tmp/query_result"
-    GENERATED_ASSETS_DIR = "tmp/generated_assets"
+    OUTPUT_ROOT = "tmp"
+
+    def self.output_dir(org_ref, org_name)
+      slug = Utils.sanitize_filename(org_name)
+      File.join(OUTPUT_ROOT, "#{org_ref}_#{slug}")
+    end
   end
 end

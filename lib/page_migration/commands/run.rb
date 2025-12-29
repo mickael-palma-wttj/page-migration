@@ -4,7 +4,7 @@ module PageMigration
   module Commands
     # Runs both extract and convert in sequence
     class Run
-      def initialize(org_ref, json_output: nil, md_output_dir: Convert::DEFAULT_OUTPUT_DIR)
+      def initialize(org_ref, json_output: nil, md_output_dir: nil)
         @org_ref = org_ref
         @json_output = json_output
         @md_output_dir = md_output_dir

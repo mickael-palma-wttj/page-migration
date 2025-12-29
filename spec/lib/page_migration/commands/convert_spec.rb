@@ -42,7 +42,7 @@ RSpec.describe PageMigration::Commands::Convert do
 
       before do
         allow(PageMigration::Support::FileDiscovery).to receive(:find_query_json!)
-          .and_return("tmp/query_result/Pg4eV6k_company/query.json")
+          .and_return("tmp/Pg4eV6k_company/query.json")
       end
 
       it "finds input file by org_ref" do
@@ -56,7 +56,7 @@ RSpec.describe PageMigration::Commands::Convert do
 
       before do
         allow(PageMigration::Support::FileDiscovery).to receive(:find_latest_query_json)
-          .and_return("tmp/query_result/latest/query.json")
+          .and_return("tmp/latest_org/query.json")
       end
 
       it "finds latest query JSON" do
@@ -70,7 +70,7 @@ RSpec.describe PageMigration::Commands::Convert do
         end
 
         it "falls back to default path" do
-          expect(PageMigration::Support::JsonLoader).to receive(:load).with("tmp/query_result/query.json")
+          expect(PageMigration::Support::JsonLoader).to receive(:load).with("tmp/query.json")
           expect { command.call }.to output.to_stdout
         end
       end
@@ -86,9 +86,13 @@ RSpec.describe PageMigration::Commands::Convert do
     end
   end
 
-  describe "DEFAULT_OUTPUT_DIR" do
-    it "has a default output directory" do
-      expect(described_class::DEFAULT_OUTPUT_DIR).to eq("tmp/org_markdown")
+  describe "default output directory" do
+    subject(:command) { described_class.new(input: "input.json") }
+
+    it "uses Config.output_dir based on org data" do
+      expect(FileUtils).to receive(:mkdir_p).with("tmp/TestRef_test_company")
+      expect(File).to receive(:write).with("tmp/TestRef_test_company/TestRef_test_company.md", anything)
+      expect { command.call }.to output.to_stdout
     end
   end
 end

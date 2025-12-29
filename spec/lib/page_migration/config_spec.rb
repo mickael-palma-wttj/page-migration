@@ -38,21 +38,19 @@ RSpec.describe PageMigration::Config do
     end
   end
 
-  describe "directory constants" do
-    it "defines EXPORT_DIR" do
-      expect(described_class::EXPORT_DIR).to eq("tmp/export")
+  describe "OUTPUT_ROOT" do
+    it "defines the root output directory" do
+      expect(described_class::OUTPUT_ROOT).to eq("tmp")
+    end
+  end
+
+  describe ".output_dir" do
+    it "returns the unified output path for an organization" do
+      expect(described_class.output_dir("Pg4eV6k", "Test Company")).to eq("tmp/Pg4eV6k_test_company")
     end
 
-    it "defines ANALYSIS_DIR" do
-      expect(described_class::ANALYSIS_DIR).to eq("tmp/analysis")
-    end
-
-    it "defines QUERY_RESULT_DIR" do
-      expect(described_class::QUERY_RESULT_DIR).to eq("tmp/query_result")
-    end
-
-    it "defines GENERATED_ASSETS_DIR" do
-      expect(described_class::GENERATED_ASSETS_DIR).to eq("tmp/generated_assets")
+    it "sanitizes the org name" do
+      expect(described_class.output_dir("Pg4eV6k", "Company/With:Bad*Chars")).to eq("tmp/Pg4eV6k_company_with_bad_chars")
     end
   end
 end
