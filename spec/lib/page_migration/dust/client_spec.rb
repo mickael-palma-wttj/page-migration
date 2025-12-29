@@ -88,17 +88,33 @@ RSpec.describe PageMigration::Dust::Client do
   end
 
   describe "error handling" do
-    before do
-      stub_request(:post, "https://dust.tt/api/v1/w/#{workspace_id}/assistant/conversations")
-        .to_return(status: 500, body: '{"error": "Internal"}', headers: {"Content-Type" => "application/json"})
+    context "with non-retryable error (400)" do
+      before do
+        stub_request(:post, "https://dust.tt/api/v1/w/#{workspace_id}/assistant/conversations")
+          .to_return(status: 400, body: '{"error": "Bad Request"}', headers: {"Content-Type" => "application/json"})
+      end
+
+      it "raises DustApiError immediately" do
+        expect { client.create_conversation }
+          .to raise_error(PageMigration::Errors::DustApiError) do |error|
+            expect(error.status).to eq(400)
+            expect(error.response_body).to eq('{"error": "Bad Request"}')
+          end
+      end
     end
 
-    it "raises DustApiError on failure" do
-      expect { client.create_conversation }
-        .to raise_error(PageMigration::DustApiError) do |error|
-          expect(error.status).to eq(500)
-          expect(error.response_body).to eq('{"error": "Internal"}')
-        end
+    context "with retryable error (500)" do
+      before do
+        stub_request(:post, "https://dust.tt/api/v1/w/#{workspace_id}/assistant/conversations")
+          .to_return(status: 500, body: '{"error": "Internal"}', headers: {"Content-Type" => "application/json"})
+      end
+
+      it "retries and eventually raises DustApiError" do
+        expect { client.create_conversation }
+          .to raise_error(PageMigration::Errors::DustApiError) do |error|
+            expect(error.status).to eq(500)
+          end
+      end
     end
   end
 end

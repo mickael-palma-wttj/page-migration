@@ -6,10 +6,13 @@ require "uri"
 
 module PageMigration
   module Dust
-    # Simple client for the Dust API
+    # Simple client for the Dust API with retry support
     class Client
       BASE_URL = "https://dust.tt/api/v1"
       OPEN_TIMEOUT = 10
+      MAX_RETRIES = 3
+      RETRY_DELAY = 2
+      RETRYABLE_ERRORS = [429, 500, 502, 503, 504].freeze
 
       attr_reader :workspace_id
       attr_accessor :debug
@@ -91,13 +94,40 @@ module PageMigration
         request["Authorization"] = "Bearer #{@api_key}"
         request["Content-Type"] = "application/json"
 
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.open_timeout = OPEN_TIMEOUT
-        http.read_timeout = Config::DEFAULT_TIMEOUT
+        with_retry do
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = true
+          http.open_timeout = OPEN_TIMEOUT
+          http.read_timeout = Config::DEFAULT_TIMEOUT
 
-        response = http.request(request)
-        handle_response(response)
+          response = http.request(request)
+          handle_response(response)
+        end
+      end
+
+      def with_retry
+        retries = 0
+        begin
+          yield
+        rescue Errors::DustApiError => e
+          if RETRYABLE_ERRORS.include?(e.status) && retries < MAX_RETRIES
+            retries += 1
+            delay = RETRY_DELAY * (2**(retries - 1))
+            puts "  ⚠️  API error #{e.status}, retrying in #{delay}s (#{retries}/#{MAX_RETRIES})..." if @debug
+            sleep(delay)
+            retry
+          end
+          raise
+        rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET => e
+          if retries < MAX_RETRIES
+            retries += 1
+            delay = RETRY_DELAY * (2**(retries - 1))
+            puts "  ⚠️  Network error, retrying in #{delay}s (#{retries}/#{MAX_RETRIES})..." if @debug
+            sleep(delay)
+            retry
+          end
+          raise Errors::DustApiError.new("Network error: #{e.message}", status: 0, response_body: nil)
+        end
       end
 
       def handle_response(response)
