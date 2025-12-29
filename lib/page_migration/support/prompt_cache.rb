@@ -3,6 +3,7 @@
 require "digest"
 require "json"
 require "fileutils"
+require "time"
 
 module PageMigration
   module Support
