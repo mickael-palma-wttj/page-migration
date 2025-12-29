@@ -1,7 +1,8 @@
 module ApplicationHelper
   include Pagy::Frontend
 
-  # Find the export ID (folder name) for an org_ref within a command run's data directory
+  # Find the export ID for an org_ref within a command run's data directory
+  # Returns format: "{command_run_id}:{folder_name}" for use with export_path
   def find_export_id_for_org(org_ref, command_run: nil)
     output_dir = command_run&.export_data_directory&.to_s || PageMigration::Config::DEFAULT_OUTPUT_ROOT
     return nil unless Dir.exist?(output_dir)
@@ -12,10 +13,14 @@ module ApplicationHelper
       .sort_by { |d| File.mtime(d) }
       .reverse
 
-    dirs.first ? File.basename(dirs.first) : nil
+    return nil unless dirs.first
+
+    folder_name = File.basename(dirs.first)
+    command_run ? "#{command_run.id}:#{folder_name}" : folder_name
   end
 
   # Find all export files for an org_ref within a command run's data directory
+  # Returns files with export_id in format "{command_run_id}:{folder_name}"
   def find_export_files_for_org(org_ref, command_run: nil)
     output_dir = command_run&.export_data_directory&.to_s || PageMigration::Config::DEFAULT_OUTPUT_ROOT
     return [] unless Dir.exist?(output_dir)
@@ -27,7 +32,8 @@ module ApplicationHelper
 
     return [] unless export_dir
 
-    export_id = File.basename(export_dir)
+    folder_name = File.basename(export_dir)
+    export_id = command_run ? "#{command_run.id}:#{folder_name}" : folder_name
 
     Dir.glob(File.join(export_dir, "**/*"))
       .select { |f| File.file?(f) }

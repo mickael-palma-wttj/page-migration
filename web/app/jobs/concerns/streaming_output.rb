@@ -24,17 +24,22 @@ module StreamingOutput
 
     begin
       yield
-      streaming_io.flush # Final flush before completing
+      # Suppress partial broadcasts before final state change
+      # The full partial will be broadcast after status update
+      streaming_io.suppress_broadcast!
+      streaming_io.flush
       # Check if interrupted before marking complete
       command_run.reload
       unless command_run.interrupted?
         command_run.update!(status: "completed", completed_at: Time.current)
       end
     rescue InterruptedError
+      streaming_io.suppress_broadcast!
       streaming_io.flush
       # Already marked as interrupted, just log
       command_run.append_output("\n⚠️ Command interrupted by user\n")
     rescue => e
+      streaming_io.suppress_broadcast!
       streaming_io.flush
       command_run.reload
       unless command_run.interrupted?
@@ -49,6 +54,11 @@ module StreamingOutput
       $stderr = original_stderr
     end
 
+    # Reload to get the latest status before broadcasting the final state
+    command_run.reload
+    # Small delay to ensure WebSocket subscription is established
+    # (race condition: job may complete before client subscribes)
+    sleep(0.2)
     broadcast_update(command_run)
   end
 
@@ -72,6 +82,11 @@ module StreamingOutput
       @buffer = StringIO.new
       @last_broadcast = Time.current
       @mutex = Mutex.new
+      @suppress_broadcast = false
+    end
+
+    def suppress_broadcast!
+      @suppress_broadcast = true
     end
 
     def write(str)
@@ -141,6 +156,8 @@ module StreamingOutput
     private
 
     def broadcast_current_output
+      return if @suppress_broadcast
+
       output = @command_run.output || ""
       # Only update the output div, not the entire partial (to avoid huge payloads)
       Turbo::StreamsChannel.broadcast_replace_to(

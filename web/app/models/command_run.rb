@@ -88,7 +88,8 @@ class CommandRun < ApplicationRecord
       locals: {command_run: self}
     )
 
-    Turbo::StreamsChannel.broadcast_replace_to(
+    # Use update action instead of replace to ensure full DOM replacement
+    Turbo::StreamsChannel.broadcast_update_to(
       "command_run_#{id}",
       target: "command_run_#{id}",
       html: html
