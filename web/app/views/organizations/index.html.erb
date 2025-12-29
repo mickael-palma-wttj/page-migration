@@ -1,0 +1,70 @@
+<% content_for(:title) { "Search Organizations - Page Migration" } %>
+
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-wttj-black">Search Organizations</h1>
+
+  <!-- Search Form -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+    <%= form_with url: organizations_path, method: :get, class: "flex gap-4", data: { turbo_frame: "_top" } do |f| %>
+      <div class="flex-1">
+        <%= f.text_field :q,
+            value: @query,
+            placeholder: "Search by company name or org reference...",
+            class: "w-full px-4 py-3 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none transition-colors",
+            autofocus: true %>
+      </div>
+      <%= f.submit "Search",
+          class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-6 py-3 rounded-lg transition-colors cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <!-- Results -->
+  <% if @query.present? %>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+      <div class="p-4 border-b border-wttj-gray-light">
+        <h2 class="font-semibold text-wttj-black">
+          <% if @organizations&.any? %>
+            Found <%= @organizations.count %> organization<%= @organizations.count == 1 ? '' : 's' %>
+          <% else %>
+            No organizations found
+          <% end %>
+        </h2>
+      </div>
+
+      <% if @organizations&.any? %>
+        <div class="divide-y divide-wttj-gray-light">
+          <% @organizations.each do |org| %>
+            <div class="p-4 hover:bg-wttj-beige transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
+                    <%= org[:reference] %>
+                  </span>
+                  <h3 class="font-medium text-wttj-black"><%= org[:name] %></h3>
+                  <% if org[:has_export] %>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Export</span>
+                  <% end %>
+                </div>
+                <div class="flex items-center gap-2">
+                  <%= link_to "View", organization_path(org[:reference]),
+                      class: "text-wttj-gray-dark hover:text-wttj-black text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+                  <%= link_to "Extract", new_command_path(org_ref: org[:reference], command: "extract"),
+                      class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black text-sm font-medium px-3 py-1 rounded transition-colors" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-wttj-gray-dark">
+          <p>No organizations match "<%= @query %>"</p>
+          <p class="text-sm mt-2">Try a different search term</p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-8 text-center">
+      <p class="text-wttj-gray-dark">Enter a company name or organization reference to search</p>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,114 @@
+<% content_for(:title) { "#{@organization&.dig(:name) || @org_ref} - Page Migration" } %>
+
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-wttj-gray-dark">
+    <%= link_to "Search", organizations_path, class: "hover:text-wttj-black" %> /
+    <span class="text-wttj-black"><%= @org_ref %></span>
+  </nav>
+
+  <% if @organization %>
+    <!-- Organization Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-wttj-black"><%= @organization[:name] %></h1>
+          <div class="flex items-center gap-4 mt-2">
+            <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
+              <%= @organization[:reference] %>
+            </span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to "Extract", new_command_path(org_ref: @org_ref, command: "extract"),
+              class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+          <%= link_to "Export", new_command_path(org_ref: @org_ref, command: "export"),
+              class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+          <%= link_to "Migrate", new_command_path(org_ref: @org_ref, command: "migrate"),
+              class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exports -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <h2 class="text-xl font-semibold text-wttj-black mb-4">Exports</h2>
+
+      <% if @exports.any? %>
+        <div class="space-y-4">
+          <% @exports.each do |export| %>
+            <div class="border border-wttj-gray-light rounded-lg p-4">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-medium text-wttj-black"><%= export[:name] %></h3>
+                <span class="text-xs text-wttj-gray-medium">
+                  Modified <%= time_ago_in_words(export[:modified_at]) %> ago
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <% export[:files].first(10).each do |file| %>
+                  <%= link_to file_export_path(export[:name], path: file),
+                      class: "text-xs font-mono bg-wttj-beige px-2 py-1 rounded hover:bg-wttj-gray-light transition-colors" do %>
+                    <%= file %>
+                  <% end %>
+                <% end %>
+                <% if export[:files].count > 10 %>
+                  <%= link_to export_path(export[:name]),
+                      class: "text-xs text-wttj-gray-dark hover:text-wttj-black" do %>
+                    +<%= export[:files].count - 10 %> more
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-wttj-gray-dark text-center py-4">No exports yet. Run Extract to get started.</p>
+      <% end %>
+    </div>
+
+    <!-- Command History -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <h2 class="text-xl font-semibold text-wttj-black mb-4">Command History</h2>
+
+      <% if @command_runs.any? %>
+        <div class="divide-y divide-wttj-gray-light">
+          <% @command_runs.each do |run| %>
+            <%= link_to command_path(run), class: "block py-3 hover:bg-wttj-beige -mx-2 px-2 rounded transition-colors" do %>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <% case run.display_status %>
+                  <% when "completed" %>
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <% when "failed" %>
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                  <% when "running" %>
+                    <span class="w-2 h-2 bg-wttj-yellow rounded-full animate-pulse"></span>
+                  <% when "interrupted" %>
+                    <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                  <% else %>
+                    <span class="w-2 h-2 bg-wttj-gray-medium rounded-full"></span>
+                  <% end %>
+                  <span class="font-mono text-sm font-medium text-wttj-black"><%= run.command %></span>
+                  <span class="text-xs text-wttj-gray-medium capitalize"><%= run.display_status %></span>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-wttj-gray-medium">
+                  <% if run.duration %>
+                    <span><%= run.duration %>s</span>
+                  <% end %>
+                  <span><%= time_ago_in_words(run.created_at) %> ago</span>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-wttj-gray-dark text-center py-4">No commands run yet for this organization.</p>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-8 text-center">
+      <p class="text-wttj-gray-dark">Organization not found: <%= @org_ref %></p>
+      <%= link_to "Back to Search", organizations_path, class: "text-wttj-yellow hover:underline mt-2 inline-block" %>
+    </div>
+  <% end %>
+</div>

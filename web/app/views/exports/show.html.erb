@@ -1,0 +1,46 @@
+<% content_for(:title) { "#{@org_ref} Export - Page Migration" } %>
+
+<div class="space-y-6">
+  <nav class="text-sm text-wttj-gray-dark">
+    <%= link_to "Exports", exports_path, class: "hover:text-wttj-black" %> /
+    <span class="text-wttj-black"><%= @org_ref %></span>
+  </nav>
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Export: <%= @org_ref %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Compare", comparison_path(params[:id]), class: "px-4 py-2 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+      <%= link_to "Run Migrate", new_command_path(org_ref: @org_ref, command: "migrate"), class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+    <div class="p-4 border-b border-wttj-gray-light">
+      <h2 class="font-semibold text-wttj-black">Files (<%= @files.count %>)</h2>
+    </div>
+
+    <div class="divide-y divide-wttj-gray-light">
+      <% @files.each do |file| %>
+        <%= link_to file_export_path(params[:id], path: file[:path]), class: "block p-3 hover:bg-wttj-beige transition-colors" do %>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <% case file[:type] %>
+              <% when :json %>
+                <span class="text-lg">📄</span>
+              <% when :markdown %>
+                <span class="text-lg">📝</span>
+              <% else %>
+                <span class="text-lg">📃</span>
+              <% end %>
+              <span class="font-mono text-sm text-wttj-black"><%= file[:path] %></span>
+            </div>
+            <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
+              <span><%= number_to_human_size(file[:size]) %></span>
+              <span><%= time_ago_in_words(file[:modified_at]) %> ago</span>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

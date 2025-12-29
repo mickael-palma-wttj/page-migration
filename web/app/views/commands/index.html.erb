@@ -1,0 +1,59 @@
+<% content_for(:title) { "Commands - Page Migration" } %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Command History</h1>
+    <%= link_to "Run Command", new_command_path, class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+    <% if @command_runs.any? %>
+      <div class="divide-y divide-wttj-gray-light">
+        <% @command_runs.each do |cmd| %>
+          <div class="flex items-center justify-between p-4 hover:bg-wttj-beige transition-colors">
+            <%= link_to command_path(cmd), class: "flex-1 flex items-center justify-between" do %>
+              <div class="flex items-center gap-4">
+                <% case cmd.display_status %>
+                <% when "completed" %>
+                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                <% when "failed" %>
+                  <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                <% when "running" %>
+                  <span class="w-3 h-3 bg-wttj-yellow rounded-full animate-pulse"></span>
+                <% when "interrupted" %>
+                  <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
+                <% else %>
+                  <span class="w-3 h-3 bg-wttj-gray-medium rounded-full"></span>
+                <% end %>
+
+                <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded"><%= cmd.command %></span>
+                <span class="text-wttj-gray-dark"><%= cmd.org_ref || "—" %></span>
+              </div>
+              <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
+                <% if cmd.duration %>
+                  <span><%= cmd.duration %>s</span>
+                <% end %>
+                <span><%= cmd.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+              </div>
+            <% end %>
+            <% unless cmd.running? %>
+              <%= button_to command_path(cmd),
+                  method: :delete,
+                  data: { turbo_confirm: "Delete this command run?" },
+                  class: "ml-4 p-1 text-wttj-gray-medium hover:text-red-600 transition-colors" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-wttj-gray-dark">
+        <p>No commands executed yet</p>
+        <%= link_to "Run your first command", new_command_path, class: "text-wttj-yellow hover:underline mt-2 inline-block" %>
+      </div>
+    <% end %>
+  </div>
+</div>

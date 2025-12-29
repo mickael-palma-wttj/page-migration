@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* WTTJ (Welcome to the Jungle) Custom Theme */
+@theme {
+  /* Primary brand color */
+  --color-wttj-yellow: #FFCD00;
+
+  /* Neutrals */
+  --color-wttj-black: #000000;
+  --color-wttj-white: #FFFFFF;
+  --color-wttj-beige: #EAE4DE;
+
+  /* Grays */
+  --color-wttj-gray-light: #DEDEDE;
+  --color-wttj-gray-medium: #989898;
+  --color-wttj-gray-dark: #585858;
+  --color-wttj-gray-darker: #444444;
+
+  /* Taupe variants */
+  --color-wttj-taupe-light: #D2CBC3;
+  --color-wttj-taupe-medium: #605B55;
+  --color-wttj-taupe-dark: #4D4944;
+
+  /* Font family */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

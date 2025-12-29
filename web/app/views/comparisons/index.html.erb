@@ -1,0 +1,38 @@
+<% content_for(:title) { "Compare - Page Migration" } %>
+
+<div class="space-y-6">
+  <h1 class="text-3xl font-bold text-wttj-black">Compare Source vs Output</h1>
+
+  <p class="text-wttj-gray-dark">
+    Select an export that has migration output to compare source data with generated content.
+  </p>
+
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+    <% if @exports.any? %>
+      <div class="divide-y divide-wttj-gray-light">
+        <% @exports.each do |export| %>
+          <%= link_to comparison_path(export[:id]), class: "block p-4 hover:bg-wttj-beige transition-colors" do %>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
+                  <%= export[:org_ref] %>
+                </span>
+                <span class="font-medium text-wttj-black"><%= export[:name] %></span>
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Migration</span>
+              </div>
+              <span class="text-sm text-wttj-gray-medium">
+                <%= time_ago_in_words(export[:modified_at]) %> ago
+              </span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-wttj-gray-dark">
+        <p>No exports with migration output found</p>
+        <p class="text-sm mt-2">Run the Migrate command to generate AI output</p>
+        <%= link_to "Run Migrate", new_command_path(command: "migrate"), class: "text-wttj-yellow hover:underline mt-2 inline-block" %>
+      </div>
+    <% end %>
+  </div>
+</div>
