@@ -34,7 +34,7 @@ RSpec.describe PageMigration::CliRunner do
   describe "COMMANDS" do
     it "includes all expected commands" do
       expect(described_class::COMMANDS).to contain_exactly(
-        "extract", "tree", "export", "convert", "run", "migrate", "health"
+        "extract", "tree", "export", "convert", "run", "migrate", "health", "app"
       )
     end
   end

@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class CommandsController < ApplicationController
+  include PaginationDefaults
+
   before_action :set_command_run, only: [:show, :destroy]
 
   def index
-    @pagy, @command_runs = pagy(CommandRun.recent, limit: 20)
+    @pagy, @command_runs = pagy(CommandRun.recent, limit: COMMANDS_PER_PAGE)
   end
 
   def new

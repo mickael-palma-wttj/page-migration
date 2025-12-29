@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PageMigration::Support::FileDiscovery do
-  let(:output_root) { PageMigration::Config::OUTPUT_ROOT }
+  let(:output_root) { PageMigration::Config.output_root }
 
   describe ".find_query_json" do
     context "when file exists" do

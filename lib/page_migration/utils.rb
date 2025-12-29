@@ -9,7 +9,8 @@ module PageMigration
     # @param name [String] the name to sanitize
     # @return [String] lowercase slug with underscores
     def sanitize_filename(name)
-      name.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/^_|_$/, "")
+      return "unknown" if name.nil? || name.to_s.empty?
+      name.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/^_|_$/, "")
     end
 
     # Checks if a value is nil or empty after stripping whitespace

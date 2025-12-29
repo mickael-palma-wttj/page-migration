@@ -5,7 +5,7 @@ require "optparse"
 module PageMigration
   # CLI parser and dispatcher
   class CliRunner
-    COMMANDS = %w[extract tree export convert run migrate health].freeze
+    COMMANDS = %w[extract tree export convert run migrate health app].freeze
     HELP_TEXT = <<~HELP
       Page Migration CLI
 
@@ -19,6 +19,7 @@ module PageMigration
         run           Run both extract and convert in sequence
         migrate       Generate assets using Dust AI based on prompts
         health        Check environment configuration and connectivity
+        app           Start the web interface
 
       Options:
         -h, --help    Show help for a command
@@ -42,6 +43,8 @@ module PageMigration
         page_migration migrate Pg4eV6k --analysis         # Run page migration fit analysis only
         page_migration migrate Pg4eV6k --dry-run          # Preview migration without changes
         page_migration health                              # Verify environment setup
+        page_migration app                                 # Start web UI on port 3000
+        page_migration app -p 4000                         # Start web UI on custom port
     HELP
 
     def initialize(args)
@@ -208,6 +211,21 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration health [options]"
         opts.on("-d", "--debug", "Enable debug mode") { @options[:debug] = true }
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+      end
+    end
+
+    def run_app
+      parser = build_app_parser
+      parser.parse!(@args)
+
+      Commands::App.new(**@options).call
+    end
+
+    def build_app_parser
+      OptionParser.new do |opts|
+        opts.banner = "Usage: page_migration app [options]"
+        opts.on("-p", "--port PORT", Integer, "Port number (default: 3000)") { |p| @options[:port] = p }
         opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end

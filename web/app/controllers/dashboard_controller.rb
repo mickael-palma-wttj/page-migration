@@ -2,9 +2,10 @@
 
 class DashboardController < ApplicationController
   include ExportFinder
+  include PaginationDefaults
 
   def index
-    @recent_commands = CommandRun.recent.limit(10)
-    @exports = list_exports(limit: 20).first(5)
+    @recent_commands = CommandRun.recent.limit(DASHBOARD_COMMANDS_LIMIT)
+    @exports = list_exports(limit: EXPORTS_QUERY_LIMIT).first(DASHBOARD_EXPORTS_LIMIT)
   end
 end

@@ -16,8 +16,10 @@ module PageMigration
         data = fetch_data
 
         if @output.nil?
-          org_data = JSON.parse(data)["organization"]
-          @output = Config.tree_json_path(@org_ref, org_data["name"])
+          parsed = JSON.parse(data)
+          org_data = parsed["organization"] || {}
+          org_name = org_data["name"] || "unknown"
+          @output = Config.tree_json_path(@org_ref, org_name)
         end
 
         write_output(data)
