@@ -72,6 +72,9 @@ group :development do
   gem "web-console"
 end
 
+# Pagination
+gem "pagy"
+
 # PageMigration dependencies
 gem "pg"                 # PostgreSQL for PageMigration database access
 gem "dotenv"             # Load .env manually (not dotenv-rails to avoid DATABASE_URL conflict)

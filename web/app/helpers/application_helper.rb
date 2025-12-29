@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include Pagy::Frontend
+
   # Find the export ID (folder name) for an org_ref within a command run's data directory
   def find_export_id_for_org(org_ref, command_run: nil)
     output_dir = command_run&.export_data_directory&.to_s || PageMigration::Config::DEFAULT_OUTPUT_ROOT
