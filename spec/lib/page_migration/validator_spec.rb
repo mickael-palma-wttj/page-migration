@@ -19,27 +19,27 @@ RSpec.describe PageMigration::Validator do
     context "with invalid org_ref" do
       it "raises ValidationError for nil" do
         expect { described_class.validate_org_ref!(nil) }
-          .to raise_error(PageMigration::ValidationError, /required/)
+          .to raise_error(PageMigration::Errors::ValidationError, /required/)
       end
 
       it "raises ValidationError for empty string" do
         expect { described_class.validate_org_ref!("") }
-          .to raise_error(PageMigration::ValidationError, /required/)
+          .to raise_error(PageMigration::Errors::ValidationError, /required/)
       end
 
       it "raises ValidationError for too short (4 chars)" do
         expect { described_class.validate_org_ref!("Ab12") }
-          .to raise_error(PageMigration::ValidationError, /Invalid organization reference/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Invalid organization reference/)
       end
 
       it "raises ValidationError for too long (11 chars)" do
         expect { described_class.validate_org_ref!("Abcd1234567") }
-          .to raise_error(PageMigration::ValidationError, /Invalid organization reference/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Invalid organization reference/)
       end
 
       it "raises ValidationError for special characters" do
         expect { described_class.validate_org_ref!("Pg4e-V6") }
-          .to raise_error(PageMigration::ValidationError, /Invalid organization reference/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Invalid organization reference/)
       end
     end
   end
@@ -62,7 +62,7 @@ RSpec.describe PageMigration::Validator do
     context "with unsupported language" do
       it "raises ValidationError" do
         expect { described_class.validate_language!("zh") }
-          .to raise_error(PageMigration::ValidationError, /Unsupported language: zh/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Unsupported language/)
       end
     end
   end
@@ -92,7 +92,7 @@ RSpec.describe PageMigration::Validator do
     context "with unsupported language" do
       it "raises ValidationError listing invalid languages" do
         expect { described_class.validate_languages!(%w[fr zh jp]) }
-          .to raise_error(PageMigration::ValidationError, /Unsupported languages: zh, jp/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Unsupported languages: zh, jp/)
       end
     end
   end
@@ -117,7 +117,7 @@ RSpec.describe PageMigration::Validator do
     context "with unsupported format" do
       it "raises ValidationError" do
         expect { described_class.validate_format!("xml") }
-          .to raise_error(PageMigration::ValidationError, /Unsupported format: xml/)
+          .to raise_error(PageMigration::Errors::ValidationError, /Unsupported format/)
       end
     end
   end
@@ -133,7 +133,7 @@ RSpec.describe PageMigration::Validator do
     context "when file does not exist" do
       it "raises FileNotFoundError" do
         expect { described_class.validate_file_exists!("/nonexistent/file.txt") }
-          .to raise_error(PageMigration::FileNotFoundError, /File not found/)
+          .to raise_error(PageMigration::Errors::FileNotFoundError, /File not found/)
       end
     end
   end
@@ -149,7 +149,7 @@ RSpec.describe PageMigration::Validator do
     context "when directory does not exist" do
       it "raises FileNotFoundError" do
         expect { described_class.validate_directory_exists!("/nonexistent/dir") }
-          .to raise_error(PageMigration::FileNotFoundError, /Directory not found/)
+          .to raise_error(PageMigration::Errors::FileNotFoundError, /Directory not found/)
       end
     end
   end

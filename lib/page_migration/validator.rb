@@ -14,8 +14,15 @@ module PageMigration
 
     class << self
       def validate_org_ref!(org_ref)
-        raise Errors::ValidationError, "Organization reference is required" if org_ref.nil? || org_ref.empty?
-        raise Errors::ValidationError, "Invalid organization reference format: #{org_ref}" unless org_ref.match?(ORG_REF_PATTERN)
+        if org_ref.nil? || org_ref.empty?
+          raise Errors::ValidationError, "Organization reference is required\n" \
+            "  Expected: 5-10 alphanumeric characters (e.g., Pg4eV6k)"
+        end
+
+        unless org_ref.match?(ORG_REF_PATTERN)
+          raise Errors::ValidationError, "Invalid organization reference: '#{org_ref}'\n" \
+            "  Expected: 5-10 alphanumeric characters (e.g., Pg4eV6k)"
+        end
 
         org_ref
       end
@@ -24,7 +31,8 @@ module PageMigration
         return "fr" if language.nil?
 
         unless SUPPORTED_LANGUAGES.include?(language)
-          raise Errors::ValidationError, "Unsupported language: #{language}. Supported: #{SUPPORTED_LANGUAGES.join(", ")}"
+          raise Errors::ValidationError, "Unsupported language: '#{language}'\n" \
+            "  Supported: #{SUPPORTED_LANGUAGES.join(", ")}"
         end
 
         language
@@ -35,7 +43,8 @@ module PageMigration
 
         invalid = languages - SUPPORTED_LANGUAGES
         unless invalid.empty?
-          raise Errors::ValidationError, "Unsupported languages: #{invalid.join(", ")}. Supported: #{SUPPORTED_LANGUAGES.join(", ")}"
+          raise Errors::ValidationError, "Unsupported languages: #{invalid.join(", ")}\n" \
+            "  Supported: #{SUPPORTED_LANGUAGES.join(", ")}"
         end
 
         languages
@@ -45,7 +54,8 @@ module PageMigration
         return "json" if format.nil?
 
         unless SUPPORTED_FORMATS.include?(format)
-          raise Errors::ValidationError, "Unsupported format: #{format}. Supported: #{SUPPORTED_FORMATS.join(", ")}"
+          raise Errors::ValidationError, "Unsupported format: '#{format}'\n" \
+            "  Supported: #{SUPPORTED_FORMATS.join(", ")}"
         end
 
         format
