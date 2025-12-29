@@ -79,13 +79,13 @@ module PageMigration
         end
 
         begin
-          client = Dust::Client.new(
+          # Just verify the client can be created (we don't want to make actual API calls)
+          Dust::Client.new(
             ENV["DUST_WORKSPACE_ID"],
             ENV["DUST_API_KEY"],
             debug: @debug
           )
 
-          # Just verify the client can be created (we don't want to make actual API calls)
           puts "   ✓ Client configured"
           puts "   ℹ️  Workspace: #{ENV["DUST_WORKSPACE_ID"]}"
           true
