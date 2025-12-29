@@ -39,20 +39,30 @@
           <% @exports.each do |export| %>
             <div class="border border-wttj-gray-light rounded-lg p-4">
               <div class="flex items-center justify-between mb-3">
-                <h3 class="font-medium text-wttj-black"><%= export[:name] %></h3>
-                <span class="text-xs text-wttj-gray-medium">
-                  Modified <%= time_ago_in_words(export[:modified_at]) %> ago
-                </span>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-medium text-wttj-black"><%= export[:name] %></h3>
+                  <span class="text-xs bg-wttj-beige px-2 py-0.5 rounded"><%= export[:command] %></span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-wttj-gray-medium">
+                    <%= export[:file_count] %> files
+                  </span>
+                  <span class="text-xs text-wttj-gray-medium">
+                    <%= time_ago_in_words(export[:modified_at]) %> ago
+                  </span>
+                  <%= link_to "View All", export_path(export[:id]),
+                      class: "text-xs text-wttj-yellow hover:underline" %>
+                </div>
               </div>
               <div class="flex flex-wrap gap-2">
-                <% export[:files].first(10).each do |file| %>
-                  <%= link_to file_export_path(export[:name], path: file),
+                <% export[:files]&.first(10)&.each do |file| %>
+                  <%= link_to file_export_path(export[:id], path: file),
                       class: "text-xs font-mono bg-wttj-beige px-2 py-1 rounded hover:bg-wttj-gray-light transition-colors" do %>
                     <%= file %>
                   <% end %>
                 <% end %>
-                <% if export[:files].count > 10 %>
-                  <%= link_to export_path(export[:name]),
+                <% if export[:files]&.count.to_i > 10 %>
+                  <%= link_to export_path(export[:id]),
                       class: "text-xs text-wttj-gray-dark hover:text-wttj-black" do %>
                     +<%= export[:files].count - 10 %> more
                   <% end %>
@@ -92,8 +102,8 @@
                   <span class="text-xs text-wttj-gray-medium capitalize"><%= run.display_status %></span>
                 </div>
                 <div class="flex items-center gap-4 text-xs text-wttj-gray-medium">
-                  <% if run.duration %>
-                    <span><%= run.duration %>s</span>
+                  <% if run.formatted_duration %>
+                    <span><%= run.formatted_duration %></span>
                   <% end %>
                   <span><%= time_ago_in_words(run.created_at) %> ago</span>
                 </div>
