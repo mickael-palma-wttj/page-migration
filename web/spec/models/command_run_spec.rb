@@ -8,6 +8,7 @@ RSpec.describe CommandRun do
     it { is_expected.to validate_presence_of(:status) }
     it { is_expected.to validate_inclusion_of(:command).in_array(CommandRun::COMMANDS) }
     it { is_expected.to validate_inclusion_of(:status).in_array(CommandRun::STATUSES) }
+    it { is_expected.to validate_length_of(:org_ref).is_at_most(50) }
   end
 
   describe "scopes" do
@@ -47,6 +48,35 @@ RSpec.describe CommandRun do
 
         expect(described_class.stale).to include(stale)
         expect(described_class.stale).not_to include(fresh)
+      end
+    end
+
+    describe ".finished" do
+      it "returns completed and failed command runs" do
+        completed = create(:command_run, :completed)
+        failed = create(:command_run, :failed)
+        running = create(:command_run, :running)
+
+        expect(described_class.finished).to include(completed, failed)
+        expect(described_class.finished).not_to include(running)
+      end
+    end
+
+    describe ".by_command" do
+      it "filters by command type" do
+        extract = create(:command_run, command: "extract")
+        create(:command_run, command: "export")
+
+        expect(described_class.by_command("extract")).to eq([extract])
+      end
+    end
+
+    describe ".by_org_ref" do
+      it "filters by organization reference" do
+        org1 = create(:command_run, org_ref: "ABC123")
+        create(:command_run, org_ref: "XYZ789")
+
+        expect(described_class.by_org_ref("ABC123")).to eq([org1])
       end
     end
   end
@@ -112,6 +142,23 @@ RSpec.describe CommandRun do
     it "calculates duration for completed runs" do
       command_run = build(:command_run, started_at: 60.seconds.ago, completed_at: Time.current)
       expect(command_run.duration).to be_within(1).of(60)
+    end
+  end
+
+  describe "#formatted_duration" do
+    it "returns nil when no duration" do
+      command_run = build(:command_run)
+      expect(command_run.formatted_duration).to be_nil
+    end
+
+    it "formats short durations in seconds" do
+      command_run = build(:command_run, started_at: 30.seconds.ago, completed_at: Time.current)
+      expect(command_run.formatted_duration).to match(/\d+(\.\d+)?s/)
+    end
+
+    it "formats long durations in minutes and seconds" do
+      command_run = build(:command_run, started_at: 125.seconds.ago, completed_at: Time.current)
+      expect(command_run.formatted_duration).to match(/2m \d+s/)
     end
   end
 

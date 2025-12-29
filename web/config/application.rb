@@ -19,6 +19,7 @@ require "action_cable/engine"
 Bundler.require(*Rails.groups)
 
 require "pagy"
+require "pagy/extras/overflow" # Handle out-of-range pages
 
 module Web
   class Application < Rails::Application
