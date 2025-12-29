@@ -4,7 +4,7 @@ class CommandsController < ApplicationController
   before_action :set_command_run, only: [:show, :destroy]
 
   def index
-    @pagy, @command_runs = pagy(CommandRun.recent)
+    @pagy, @command_runs = pagy(CommandRun.recent, limit: 20)
   end
 
   def new
