@@ -10,7 +10,7 @@ class ExportsController < ApplicationController
   end
 
   def show
-    @files = list_files(@export_path)
+    @files = ExportService.list_files(@export_path)
     @org_ref = extract_org_ref(params[:id])
     @command_run = find_command_run_for_export(params[:id])
   end
@@ -40,23 +40,6 @@ class ExportsController < ApplicationController
 
   def valid_file_path?(full_path)
     File.exist?(full_path) && full_path.start_with?(@export_path)
-  end
-
-  def list_files(export_path)
-    Dir.glob(File.join(export_path, "**/*"))
-      .select { |f| File.file?(f) }
-      .map { |file| build_file_info(file, export_path) }
-      .sort_by { |f| f[:path] }
-  end
-
-  def build_file_info(file, export_path)
-    {
-      name: File.basename(file),
-      path: file.sub("#{export_path}/", ""),
-      size: File.size(file),
-      type: detect_file_type(file),
-      modified_at: File.mtime(file)
-    }
   end
 
   def detect_file_type(filename)
