@@ -10,7 +10,7 @@ module PageMigration
     SUPPORTED_LANGUAGES = %w[fr en cs de es it pt].freeze
 
     # Supported formats
-    SUPPORTED_FORMATS = %w[json text].freeze
+    SUPPORTED_FORMATS = %w[json simple-json].freeze
 
     class << self
       def validate_org_ref!(org_ref)

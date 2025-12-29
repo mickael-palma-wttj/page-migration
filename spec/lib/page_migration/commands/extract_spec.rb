@@ -11,9 +11,17 @@ RSpec.describe PageMigration::Commands::Extract do
       }]
     }
   end
+  let(:tree_data) do
+    {
+      "page_tree" => [],
+      "organization" => {"reference" => org_ref, "name" => "Test Company"}
+    }
+  end
   let(:json_data) { org_data.to_json }
+  let(:tree_json) { tree_data.to_json }
   let(:mock_conn) { double("connection") }
   let(:mock_query) { instance_double(PageMigration::Queries::OrganizationQuery, call: json_data) }
+  let(:mock_tree_query) { instance_double(PageMigration::Queries::PageTreeQuery, call: tree_json) }
 
   before do
     allow(PageMigration::Database).to receive(:with_connection).and_yield(mock_conn)
@@ -43,26 +51,6 @@ RSpec.describe PageMigration::Commands::Extract do
       end
     end
 
-    context "with text format" do
-      subject(:command) { described_class.new(org_ref, format: "text") }
-      let(:text_generator) { instance_double(PageMigration::Generators::TextContentGenerator, generate: "Content") }
-
-      before do
-        allow(PageMigration::Generators::TextContentGenerator).to receive(:new).and_return(text_generator)
-      end
-
-      it "uses TextContentGenerator" do
-        expect(PageMigration::Generators::TextContentGenerator).to receive(:new)
-          .with(anything, language: "fr")
-        expect { command.call }.to output.to_stdout
-      end
-
-      it "writes text to output file" do
-        expect(File).to receive(:write).with(/contenu_fr\.txt$/, "Content")
-        expect { command.call }.to output(/Text content extracted/).to_stdout
-      end
-    end
-
     context "with custom output path" do
       subject(:command) { described_class.new(org_ref, output: "custom/path.json") }
 
@@ -72,25 +60,47 @@ RSpec.describe PageMigration::Commands::Extract do
       end
     end
 
-    context "with language option" do
-      subject(:command) { described_class.new(org_ref, format: "text", language: "en") }
-      let(:text_generator) { instance_double(PageMigration::Generators::TextContentGenerator, generate: "Content") }
+    context "with simple-json format" do
+      subject(:command) { described_class.new(org_ref, format: "simple-json") }
+      let(:simple_json_generator) { instance_double(PageMigration::Generators::SimpleJsonGenerator, to_json: "{}") }
 
       before do
-        allow(PageMigration::Generators::TextContentGenerator).to receive(:new).and_return(text_generator)
+        allow(PageMigration::Queries::PageTreeQuery).to receive(:new).and_return(mock_tree_query)
+        allow(PageMigration::Generators::SimpleJsonGenerator).to receive(:new).and_return(simple_json_generator)
+      end
+
+      it "uses SimpleJsonGenerator" do
+        expect(PageMigration::Generators::SimpleJsonGenerator).to receive(:new)
+          .with(anything, tree_data: anything, language: "fr")
+        expect { command.call }.to output.to_stdout
+      end
+
+      it "writes to .json file" do
+        expect(File).to receive(:write).with(/contenu_fr\.json$/, "{}")
+        expect { command.call }.to output(/Content extracted/).to_stdout
+      end
+    end
+
+    context "with language option" do
+      subject(:command) { described_class.new(org_ref, format: "simple-json", language: "en") }
+      let(:simple_json_generator) { instance_double(PageMigration::Generators::SimpleJsonGenerator, to_json: "{}") }
+
+      before do
+        allow(PageMigration::Queries::PageTreeQuery).to receive(:new).and_return(mock_tree_query)
+        allow(PageMigration::Generators::SimpleJsonGenerator).to receive(:new).and_return(simple_json_generator)
       end
 
       it "passes language to generator" do
-        expect(PageMigration::Generators::TextContentGenerator).to receive(:new)
-          .with(anything, language: "en")
+        expect(PageMigration::Generators::SimpleJsonGenerator).to receive(:new)
+          .with(anything, tree_data: anything, language: "en")
         expect { command.call }.to output.to_stdout
       end
     end
   end
 
   describe "FORMATS" do
-    it "supports json and text" do
-      expect(described_class::FORMATS).to eq(%w[json text])
+    it "supports json and simple-json" do
+      expect(described_class::FORMATS).to eq(%w[json simple-json])
     end
   end
 end

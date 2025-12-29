@@ -59,11 +59,11 @@ RSpec.describe PageMigration::CliRunner do
     end
 
     context "with format option" do
-      let(:runner) { described_class.new(["extract", "Pg4eV6k", "-f", "text"]) }
+      let(:runner) { described_class.new(["extract", "Pg4eV6k", "-f", "simple-json"]) }
 
       it "passes format to command" do
         expect(PageMigration::Commands::Extract).to receive(:new)
-          .with("Pg4eV6k", hash_including(format: "text"))
+          .with("Pg4eV6k", hash_including(format: "simple-json"))
           .and_return(double(call: nil))
         runner.call
       end

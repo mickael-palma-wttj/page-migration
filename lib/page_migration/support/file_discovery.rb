@@ -23,16 +23,16 @@ module PageMigration
           find_latest_query_json || raise(FileNotFoundError.new("No query.json files found"))
         end
 
-        def find_text_content(org_ref, org_name, language)
-          path = File.join(Config::OUTPUT_ROOT, "#{org_ref}_#{org_name}", "contenu_#{language}.txt")
+        def find_simple_json_content(org_ref, org_name, language)
+          path = File.join(Config::OUTPUT_ROOT, "#{org_ref}_#{org_name}", "contenu_#{language}.json")
           return path if File.exist?(path)
 
-          Dir.glob(File.join(Config::OUTPUT_ROOT, "#{org_ref}_*", "contenu_#{language}.txt")).first
+          Dir.glob(File.join(Config::OUTPUT_ROOT, "#{org_ref}_*", "contenu_#{language}.json")).first
         end
 
-        def find_text_content!(org_ref, org_name, language)
-          find_text_content(org_ref, org_name, language) ||
-            raise(FileNotFoundError.new("No text content for #{org_ref} (#{language})"))
+        def find_simple_json_content!(org_ref, org_name, language)
+          find_simple_json_content(org_ref, org_name, language) ||
+            raise(FileNotFoundError.new("No content file for #{org_ref} (#{language})"))
         end
 
         def find_legacy_json(org_ref)

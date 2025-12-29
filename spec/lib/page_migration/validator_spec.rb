@@ -103,8 +103,8 @@ RSpec.describe PageMigration::Validator do
         expect(described_class.validate_format!("json")).to eq("json")
       end
 
-      it "returns 'text'" do
-        expect(described_class.validate_format!("text")).to eq("text")
+      it "returns 'simple-json'" do
+        expect(described_class.validate_format!("simple-json")).to eq("simple-json")
       end
     end
 

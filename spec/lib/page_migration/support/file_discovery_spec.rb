@@ -87,40 +87,40 @@ RSpec.describe PageMigration::Support::FileDiscovery do
     end
   end
 
-  describe ".find_text_content" do
+  describe ".find_simple_json_content" do
     context "when exact path exists" do
       before do
         allow(File).to receive(:exist?).and_return(true)
       end
 
       it "returns the exact path" do
-        result = described_class.find_text_content("Pg4eV6k", "company", "fr")
-        expect(result).to eq("tmp/Pg4eV6k_company/contenu_fr.txt")
+        result = described_class.find_simple_json_content("Pg4eV6k", "company", "fr")
+        expect(result).to eq("tmp/Pg4eV6k_company/contenu_fr.json")
       end
     end
 
     context "when exact path does not exist but glob finds file" do
       before do
         allow(File).to receive(:exist?).and_return(false)
-        allow(Dir).to receive(:glob).and_return(["tmp/Pg4eV6k_other/contenu_fr.txt"])
+        allow(Dir).to receive(:glob).and_return(["tmp/Pg4eV6k_other/contenu_fr.json"])
       end
 
       it "returns the globbed path" do
-        result = described_class.find_text_content("Pg4eV6k", "company", "fr")
-        expect(result).to eq("tmp/Pg4eV6k_other/contenu_fr.txt")
+        result = described_class.find_simple_json_content("Pg4eV6k", "company", "fr")
+        expect(result).to eq("tmp/Pg4eV6k_other/contenu_fr.json")
       end
     end
   end
 
-  describe ".find_text_content!" do
+  describe ".find_simple_json_content!" do
     context "when no file found" do
       before do
-        allow(described_class).to receive(:find_text_content).and_return(nil)
+        allow(described_class).to receive(:find_simple_json_content).and_return(nil)
       end
 
       it "raises FileNotFoundError" do
-        expect { described_class.find_text_content!("Pg4eV6k", "company", "fr") }
-          .to raise_error(PageMigration::FileNotFoundError, /No text content for Pg4eV6k/)
+        expect { described_class.find_simple_json_content!("Pg4eV6k", "company", "fr") }
+          .to raise_error(PageMigration::FileNotFoundError, /No content file for Pg4eV6k/)
       end
     end
   end

@@ -10,9 +10,11 @@ module PageMigration
     #   Organization
     #     └── WebsiteOrganization (links org to a website like wttj_fr)
     #           └── CmsPages (company profile pages: about, team, etc.)
-    #                 └── CmsBlocks (content sections within a page)
-    #                       └── CmsContents (individual content items)
-    #                             └── Records (images, videos, offices, etc.)
+    #                 └── CmsSections (page layout sections)
+    #                       └── CmsContainers (via cms_sections_containers join)
+    #                             └── CmsBlocks (content sections within a page)
+    #                                   └── CmsContents (individual content items)
+    #                                         └── Records (images, videos, offices, etc.)
     #
     # The query uses nested json_agg() to build the hierarchy in a single query,
     # avoiding N+1 queries. Each content item can reference different record types
@@ -120,9 +122,12 @@ module PageMigration
                     ) ORDER BY b.position
                   )
                   FROM cms_blocks b
-                  -- Blocks belong to containers, which belong to website_organizations
+                  -- Blocks belong to containers, linked to pages via sections
                   WHERE b.cms_container_id IN (
-                    SELECT id FROM cms_containers WHERE website_organization_id = wo.id
+                    SELECT sc.cms_container_id
+                    FROM cms_sections s
+                    JOIN cms_sections_containers sc ON s.id = sc.cms_section_id
+                    WHERE s.cms_page_id = p.id
                   )
                 )
               ) ORDER BY p.position

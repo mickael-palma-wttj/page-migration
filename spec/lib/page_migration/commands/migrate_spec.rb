@@ -16,7 +16,7 @@ RSpec.describe PageMigration::Commands::Migrate do
     allow(ENV).to receive(:fetch).with("DUST_AGENT_ID").and_return("agent_123")
     allow(PageMigration::Support::JsonLoader).to receive(:load).and_return(org_data)
     allow(PageMigration::Support::FileDiscovery).to receive(:find_query_json).and_return("tmp/query.json")
-    allow(PageMigration::Support::FileDiscovery).to receive(:find_text_content).and_return("tmp/content.txt")
+    allow(PageMigration::Support::FileDiscovery).to receive(:find_simple_json_content).and_return("tmp/contenu_fr.json")
     allow(File).to receive(:exist?).and_return(true)
     allow(File).to receive(:read).and_return("Content text")
     allow(FileUtils).to receive(:mkdir_p)
@@ -93,23 +93,23 @@ RSpec.describe PageMigration::Commands::Migrate do
       end
     end
 
-    context "when text content not found" do
+    context "when content file not found" do
       let(:command) { described_class.new(org_ref) }
       let(:extract_command) { instance_double(PageMigration::Commands::Extract, call: nil) }
 
       before do
-        allow(PageMigration::Support::FileDiscovery).to receive(:find_text_content).and_return(nil)
+        allow(PageMigration::Support::FileDiscovery).to receive(:find_simple_json_content).and_return(nil)
         allow(PageMigration::Commands::Extract).to receive(:new).and_return(extract_command)
         allow(mock_processor).to receive(:process)
         allow(mock_runner).to receive(:run)
         allow(Dir).to receive(:glob).and_return([])
       end
 
-      it "runs extract with text format" do
+      it "runs extract with simple-json format" do
         expect(PageMigration::Commands::Extract).to receive(:new)
-          .with(org_ref, format: "text", language: "fr")
-        # Will raise because text file still not found after extract
-        expect { command.call }.to raise_error(PageMigration::Error, /Text extraction failed/)
+          .with(org_ref, format: "simple-json", language: "fr")
+        # Will raise because content file still not found after extract
+        expect { command.call }.to raise_error(PageMigration::Error, /Content extraction failed/)
       end
     end
   end

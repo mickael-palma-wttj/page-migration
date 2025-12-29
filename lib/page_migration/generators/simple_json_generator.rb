@@ -1,23 +1,33 @@
 # frozen_string_literal: true
 
 require "json"
+require "time"
 
 module PageMigration
   module Generators
-    # Generates a plain text export of all content for an organization
-    class TextContentGenerator
+    # Generates a simple JSON export with flat page array and extracted text content
+    class SimpleJsonGenerator
       def initialize(org_data, tree_data: nil, language: "fr")
         @org = org_data
         @tree_data = tree_data
         @language = language
-        @buffer = []
         @pages_by_id = build_pages_index
       end
 
       def generate
-        render_header
-        render_pages
-        @buffer.join("\n")
+        {
+          organization: {
+            reference: @org["reference"],
+            name: @org["name"]
+          },
+          language: @language,
+          exported_at: Time.now.iso8601,
+          pages: build_pages_array
+        }
+      end
+
+      def to_json
+        JSON.pretty_generate(generate)
       end
 
       private
@@ -27,19 +37,10 @@ module PageMigration
         pages.each_with_object({}) { |p, h| h[p["id"]] = p }
       end
 
-      def render_header
-        @buffer << "=" * 80
-        @buffer << "CONTENU #{(@language.upcase == "FR") ? "FRANÇAIS" : "ENGLISH"} - #{@org["name"]} (#{@org["reference"]})"
-        @buffer << "=" * 80
-        @buffer << "\n"
-      end
-
-      def render_pages
+      def build_pages_array
         ordered_pages = build_ordered_pages
-        total = ordered_pages.length
-
-        ordered_pages.each_with_index do |page_info, idx|
-          render_page(page_info, idx + 1, total)
+        ordered_pages.each_with_index.map do |page_info, idx|
+          build_page_entry(page_info, idx)
         end
       end
 
@@ -47,7 +48,6 @@ module PageMigration
         if @tree_data && @tree_data["page_tree"]
           build_hierarchical_order
         else
-          # Fallback to flat order from org data
           (@org["pages"] || []).map { |p| {page: p, depth: 0, slug: p["slug"]} }
         end
       end
@@ -70,122 +70,103 @@ module PageMigration
           result << {
             page: page_data,
             depth: tree_page["depth"] || 0,
-            slug: tree_page["slug"],
-            name: tree_page["name"]
+            slug: tree_page["slug"]
           }
         end
 
-        # Find children (pages whose ancestry equals this page's id)
         children = all_tree_pages.select { |p| p["ancestry"] == tree_page["id"].to_s }
         children.sort_by { |p| [p["position"] || 0, p["slug"] || ""] }.each do |child|
           collect_with_children(child, all_tree_pages, result)
         end
       end
 
-      def render_page(page_info, index, total)
+      def build_page_entry(page_info, order)
         page = page_info[:page]
-        depth = page_info[:depth]
         slug = page_info[:slug] || page["slug"] || "/"
 
-        # Reset deduplication per page so content appears where it belongs
-        @seen_content = Set.new
+        {
+          order: order,
+          slug: slug,
+          depth: page_info[:depth],
+          content: extract_page_content(page)
+        }
+      end
 
-        @buffer << "\n"
-        @buffer << "█" * 80
-        depth_indicator = (depth > 0) ? " (depth: #{depth})" : ""
-        @buffer << "PAGE #{index}/#{total} : #{slug.upcase}#{depth_indicator}"
-        @buffer << "█" * 80
-        @buffer << "\n"
+      def extract_page_content(page)
+        seen_content = Set.new
+        content = []
 
         blocks = page["content_blocks"] || []
         blocks.each do |block|
-          render_block(block)
+          items = block["content_items"] || []
+          items.each do |item|
+            extract_item_content(item, content, seen_content)
+          end
         end
 
-        @buffer << "-" * 80
-        @buffer << "\n"
+        content
       end
 
-      def render_block(block)
-        items = block["content_items"] || []
-        items.each do |item|
-          render_item(item)
-        end
-      end
-
-      def render_item(item)
+      def extract_item_content(item, content, seen_content)
         props = item["properties"] || {}
-        extract_text_from_properties(props)
 
-        render_record(item["record"], item["record_type"]) if item["record"]
-      end
-
-      def extract_text_from_properties(props)
         # Primary content properties
         %w[title subtitle surtitle body content description name value].each do |key|
-          extract_localized_text(props, key)
+          add_localized_text(props, key, content, seen_content)
         end
 
-        # Labels and links (may contain meaningful text)
+        # Labels and links
         %w[label link_title topic].each do |key|
-          extract_localized_text(props, key)
+          add_localized_text(props, key, content, seen_content)
         end
 
-        # Stats/numbers with context
+        # Percent values
         if props["percent"]
           val = props["percent"]
           text = val.is_a?(Hash) ? (val[@language] || val["fr"] || val["en"]) : val
-          append_text("#{text}%") if text && !text.to_s.empty?
+          add_text("#{text}%", content, seen_content) if text && !text.to_s.empty?
         end
 
-        # URLs (external links can indicate partnerships, social presence)
-        %w[link_url url].each do |key|
-          val = props[key]
-          append_text(val) if val.is_a?(String) && val.start_with?("http")
-        end
+        # Records
+        extract_record_content(item["record"], item["record_type"], content, seen_content) if item["record"]
       end
 
-      def extract_localized_text(props, key)
+      def add_localized_text(props, key, content, seen_content)
         val = props[key]
         if val.is_a?(Hash)
           text = val[@language] || val["fr"] || val["en"]
-          append_text(text) if text
+          add_text(text, content, seen_content) if text
         elsif val.is_a?(String) && !val.empty?
-          append_text(val)
+          add_text(val, content, seen_content)
         end
       end
 
-      def render_record(record, type)
+      def extract_record_content(record, type, content, seen_content)
         case type
         when "Office"
           office_name = record["name"]
           office_name += " (Headquarters)" if record["is_headquarter"]
-          append_text(office_name)
+          add_text(office_name, content, seen_content)
           address = [record["address"], record["zip_code"], record["city"], record["country_code"]].compact.join(", ")
-          append_text(address) unless address.empty?
+          add_text(address, content, seen_content) unless address.empty?
         when "Organization"
-          append_text(record["name"])
+          add_text(record["name"], content, seen_content)
         when "Cms::Image", "Cms::Video"
-          append_text(record["name"]) if record["name"]
-          append_text(record["description"]) if record["description"]
+          add_text(record["name"], content, seen_content) if record["name"]
+          add_text(record["description"], content, seen_content) if record["description"]
         end
       end
 
-      def append_text(text)
+      def add_text(text, content, seen_content)
         return if text.nil? || text.to_s.strip.empty?
 
         clean_text = text.to_s.gsub("\r\n", "\n").strip
-        fingerprint = normalize_for_dedup(clean_text)
+        fingerprint = clean_text.downcase.gsub(/\s+/, " ").strip
 
-        return if @seen_content.include?(fingerprint)
+        return if seen_content.include?(fingerprint)
 
-        @seen_content.add(fingerprint)
-        @buffer << clean_text
-        @buffer << ""
-      end
-
-      def normalize_for_dedup(text)
-        text.downcase.gsub(/\s+/, " ").strip
+        seen_content.add(fingerprint)
+        content << clean_text
       end
     end
   end

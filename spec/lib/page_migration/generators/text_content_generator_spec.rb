@@ -99,9 +99,84 @@ RSpec.describe PageMigration::Generators::TextContentGenerator do
 
       let(:generator) { described_class.new(org_with_duplicates) }
 
-      it "deduplicates identical content" do
+      it "deduplicates identical content within a page" do
         result = generator.generate
         expect(result.scan("Titre").length).to eq(1)
+      end
+    end
+
+    context "with tree data for hierarchical ordering" do
+      let(:org_with_multiple_pages) do
+        {
+          "name" => "Test Company",
+          "reference" => "TestRef",
+          "pages" => [
+            {"id" => 1, "name" => "Root", "slug" => "/", "content_blocks" => []},
+            {"id" => 2, "name" => "Child A", "slug" => "/child-a", "content_blocks" => []},
+            {"id" => 3, "name" => "Child B", "slug" => "/child-b", "content_blocks" => []}
+          ]
+        }
+      end
+
+      let(:tree_data) do
+        {
+          "page_tree" => [
+            {"id" => 1, "slug" => "/", "name" => "Root", "is_root" => true, "depth" => 0, "ancestry" => nil, "position" => 0},
+            {"id" => 2, "slug" => "/child-a", "name" => "Child A", "is_root" => false, "depth" => 1, "ancestry" => "1", "position" => 0},
+            {"id" => 3, "slug" => "/child-b", "name" => "Child B", "is_root" => false, "depth" => 1, "ancestry" => "1", "position" => 1}
+          ]
+        }
+      end
+
+      let(:generator) { described_class.new(org_with_multiple_pages, tree_data: tree_data) }
+
+      it "orders pages hierarchically" do
+        result = generator.generate
+        root_pos = result.index("PAGE 1/3 : /")
+        child_a_pos = result.index("PAGE 2/3 : /CHILD-A")
+        child_b_pos = result.index("PAGE 3/3 : /CHILD-B")
+
+        expect(root_pos).to be < child_a_pos
+        expect(child_a_pos).to be < child_b_pos
+      end
+
+      it "shows depth indicator for nested pages" do
+        result = generator.generate
+        expect(result).to include("(depth: 1)")
+      end
+    end
+
+    context "per-page deduplication" do
+      let(:org_with_shared_content) do
+        {
+          "name" => "Test Company",
+          "reference" => "TestRef",
+          "pages" => [
+            {
+              "id" => 1,
+              "name" => "Page 1",
+              "slug" => "/page1",
+              "content_blocks" => [
+                {"content_items" => [{"properties" => {"title" => {"fr" => "Shared Title"}}, "record" => nil, "record_type" => nil}]}
+              ]
+            },
+            {
+              "id" => 2,
+              "name" => "Page 2",
+              "slug" => "/page2",
+              "content_blocks" => [
+                {"content_items" => [{"properties" => {"title" => {"fr" => "Shared Title"}}, "record" => nil, "record_type" => nil}]}
+              ]
+            }
+          ]
+        }
+      end
+
+      let(:generator) { described_class.new(org_with_shared_content) }
+
+      it "shows same content on multiple pages where it belongs" do
+        result = generator.generate
+        expect(result.scan("Shared Title").length).to eq(2)
       end
     end
   end

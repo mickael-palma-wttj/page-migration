@@ -41,10 +41,10 @@ module PageMigration
           return
         end
 
-        txt_file = ensure_text_exported(org_data)
+        content_file = ensure_content_exported(org_data)
 
-        puts "📖 Using content from: #{txt_file}"
-        content_summary = File.read(txt_file)
+        puts "📖 Using content from: #{content_file}"
+        content_summary = File.read(content_file)
 
         debug_log "Content size: #{content_summary.bytesize} bytes"
         debug_log "Language: #{@language}"
@@ -64,13 +64,13 @@ module PageMigration
         puts "🔍 Dry run mode - showing what would be executed\n\n"
 
         output_dir = Config.output_dir(@org_ref, org_data["name"])
-        txt_file = find_exported_txt(org_data)
+        content_file = find_exported_content(org_data)
 
         puts "📋 Configuration:"
         puts "   Organization: #{org_data["name"]} (#{@org_ref})"
         puts "   Language: #{@language}"
         puts "   Output directory: #{output_dir}"
-        puts "   Text content: #{txt_file || "(would be generated)"}"
+        puts "   Content file: #{content_file || "(would be generated)"}"
         puts ""
 
         if @analysis_only
@@ -121,18 +121,18 @@ module PageMigration
         data
       end
 
-      def ensure_text_exported(org_data)
-        txt_file = find_exported_txt(org_data)
-        return txt_file if txt_file && File.exist?(txt_file)
+      def ensure_content_exported(org_data)
+        json_file = find_exported_content(org_data)
+        return json_file if json_file && File.exist?(json_file)
 
-        puts "⚠️ Exported Text not found. Running extract --format text first..."
-        Extract.new(@org_ref, format: "text", language: @language).call
-        find_exported_txt(org_data) || raise(PageMigration::Error, "Text extraction failed")
+        puts "⚠️ Exported content not found. Running extract --format simple-json first..."
+        Extract.new(@org_ref, format: "simple-json", language: @language).call
+        find_exported_content(org_data) || raise(PageMigration::Error, "Content extraction failed")
       end
 
-      def find_exported_txt(org_data)
+      def find_exported_content(org_data)
         org_name = Utils.sanitize_filename(org_data["name"])
-        Support::FileDiscovery.find_text_content(@org_ref, org_name, @language)
+        Support::FileDiscovery.find_simple_json_content(@org_ref, org_name, @language)
       end
 
       def ensure_markdown_exported(org_data)

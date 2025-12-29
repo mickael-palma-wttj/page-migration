@@ -5,9 +5,11 @@ require "fileutils"
 
 module PageMigration
   module Commands
-    # Extracts organization data from database to JSON or text format
+    # Extracts organization data from database to JSON format
+    # - json: raw database export with full structure
+    # - simple-json: simplified content export with flat page array
     class Extract
-      FORMATS = %w[json text].freeze
+      FORMATS = %w[json simple-json].freeze
 
       def initialize(org_ref, output: nil, format: "json", language: "fr")
         @org_ref = org_ref
@@ -27,8 +29,10 @@ module PageMigration
           case @format
           when "json"
             write_json(json_data)
-          when "text"
-            write_text(org_data)
+          when "simple-json"
+            tree_json = Queries::PageTreeQuery.new(@org_ref).call(conn)
+            tree_data = JSON.parse(tree_json)
+            write_simple_json(org_data, tree_data)
           end
         end
 
@@ -46,8 +50,8 @@ module PageMigration
         case @format
         when "json"
           File.join(base_dir, Config::QUERY_JSON)
-        when "text"
-          File.join(base_dir, "contenu_#{@language}.txt")
+        when "simple-json"
+          File.join(base_dir, "contenu_#{@language}.json")
         end
       end
 
@@ -57,11 +61,10 @@ module PageMigration
         puts "✅ Exported to: #{@output}"
       end
 
-      def write_text(org_data)
-        generator = Generators::TextContentGenerator.new(org_data, language: @language)
-        content = generator.generate
-        File.write(@output, content)
-        puts "✅ Text content extracted to: #{@output}"
+      def write_simple_json(org_data, tree_data)
+        generator = Generators::SimpleJsonGenerator.new(org_data, tree_data: tree_data, language: @language)
+        File.write(@output, generator.to_json)
+        puts "✅ Content extracted to: #{@output}"
       end
     end
   end

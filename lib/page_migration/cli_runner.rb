@@ -12,7 +12,7 @@ module PageMigration
       Usage: page_migration <command> [options]
 
       Commands:
-        extract       Extract organization data from database (JSON or text format)
+        extract       Extract organization data from database (JSON or simple-json format)
         tree          Extract page tree hierarchy to JSON
         export        Export complete content as Markdown (one file per language)
         convert       Convert JSON data to Markdown files
@@ -77,8 +77,8 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration extract <org_reference> [options]"
         opts.on("-o", "--output FILE", "Output file") { |v| @options[:output] = v }
-        opts.on("-f", "--format FORMAT", "Output format: json (default) or text") { |v| @options[:format] = v }
-        opts.on("-l", "--language LANG", "Language for text format (default: fr)") { |v| @options[:language] = v }
+        opts.on("-f", "--format FORMAT", "Output format: json or simple-json") { |v| @options[:format] = v }
+        opts.on("-l", "--language LANG", "Language for content export (default: fr)") { |v| @options[:language] = v }
         opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end

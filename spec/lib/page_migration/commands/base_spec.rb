@@ -67,7 +67,7 @@ RSpec.describe PageMigration::Commands::Base do
 
       it "raises DatabaseError" do
         command = test_command_class.new("TestRef")
-        expect { command.send(:with_database) { } }
+        expect { command.send(:with_database) {} }
           .to raise_error(PageMigration::Errors::DatabaseError, /Database error/)
       end
     end
