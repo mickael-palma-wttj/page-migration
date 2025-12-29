@@ -58,12 +58,9 @@ module StreamingOutput
   end
 
   def broadcast_update(command_run)
-    Turbo::StreamsChannel.broadcast_replace_to(
-      "command_run_#{command_run.id}",
-      target: "command_run_#{command_run.id}",
-      partial: "commands/command_run",
-      locals: {command_run: command_run}
-    )
+    # Delegate to the model's broadcast_update which uses ApplicationController.render
+    # for full helper context (needed for export file listing)
+    command_run.broadcast_update
   end
 
   # Custom IO class that streams output in real-time to file

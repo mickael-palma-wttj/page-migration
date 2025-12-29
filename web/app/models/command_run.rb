@@ -82,11 +82,16 @@ class CommandRun < ApplicationRecord
   end
 
   def broadcast_update
+    # Use ApplicationController.render to get full helper context
+    html = ApplicationController.render(
+      partial: "commands/command_run",
+      locals: {command_run: self}
+    )
+
     Turbo::StreamsChannel.broadcast_replace_to(
       "command_run_#{id}",
       target: "command_run_#{id}",
-      partial: "commands/command_run",
-      locals: {command_run: self}
+      html: html
     )
   end
 
