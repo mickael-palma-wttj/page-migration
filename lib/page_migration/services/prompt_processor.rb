@@ -13,12 +13,15 @@ module PageMigration
       PROMPTS_DIR = File.expand_path("../prompts", __dir__)
       MIGRATION_PROMPTS_DIR = File.join(PROMPTS_DIR, "migration")
 
-      def initialize(client, _assistant_ids, runner, language: "fr", debug: false)
+      def initialize(client, _assistant_ids, runner, language: "fr", debug: false, cache: nil)
         @client = client
         @runner = runner
         @language = language
         @debug = debug
+        @cache = cache
       end
+
+      attr_reader :cache
 
       def process(prompt_path, content_summary, output_root, additional_instructions: nil, save: true)
         config = parse_prompt_file(prompt_path)
@@ -28,11 +31,34 @@ module PageMigration
         debug_log "  Role: #{config["role"]}"
         debug_log "  Task: #{config["task"]}"
 
+        # Build the full prompt content for fingerprinting
+        prompt_content = build_prompt_content(config, additional_instructions)
+
+        # Check cache first
+        if @cache&.enabled?
+          fingerprint = @cache.fingerprint(prompt_content, content_summary)
+          if (cached_result = @cache.get(fingerprint))
+            debug_log "  Cache HIT (#{fingerprint[0..7]})"
+            if save
+              target_path = build_target_path(prompt_path, output_root, prompt_name)
+              save_result(target_path, cached_result, prompt_name)
+              debug_log "  Saved to: #{target_path}"
+            end
+            return cached_result
+          end
+          debug_log "  Cache MISS (#{fingerprint[0..7]})"
+        end
+
         result = execute(config, content_summary, additional_instructions)
         return nil unless result
 
         debug_log "  Response received (#{result[:content]&.length || 0} chars)"
         debug_log "  Conversation URL: #{result[:url]}" if result[:url]
+
+        # Cache the result
+        if @cache&.enabled? && result[:content]
+          @cache.set(fingerprint, result[:content], {prompt: prompt_name})
+        end
 
         if save
           target_path = build_target_path(prompt_path, output_root, prompt_name)
@@ -44,6 +70,13 @@ module PageMigration
       end
 
       private
+
+      def build_prompt_content(config, instructions)
+        content = "#{config["role"]}:#{config["task"]}:#{config["content"]}"
+        content += ":#{instructions}" if instructions
+        content += ":#{config["output_format"].to_json}" if config["output_format"]
+        content
+      end
 
       def execute(config, summary, instructions)
         language_name = (@language == "fr") ? "French" : "English"

@@ -12,12 +12,13 @@ module PageMigration
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
       ANALYSIS_PROMPT = File.expand_path("../prompts/analysis.prompt.md", __dir__)
 
-      def initialize(org_ref, language: "fr", debug: false, analysis: false, dry_run: false)
+      def initialize(org_ref, language: "fr", debug: false, analysis: false, dry_run: false, cache: true)
         @org_ref = org_ref
         @language = language
         @debug = debug
         @analysis_only = analysis
         @dry_run = dry_run
+        @cache_enabled = cache
 
         return if @dry_run
 
@@ -150,6 +151,14 @@ module PageMigration
       end
 
       def run_migration_workflow(summary, output_root)
+        # Initialize cache for this run
+        cache = Support::PromptCache.new(output_root, enabled: @cache_enabled)
+        @processor = PageMigration::Services::PromptProcessor.new(
+          @client, {}, @processor.instance_variable_get(:@runner),
+          language: @language, debug: @debug, cache: cache
+        )
+        @prompt_runner = PageMigration::Services::PromptRunner.new(@processor, debug: @debug)
+
         puts "\n🔍 Running brand analysis..."
         analysis_result = run_analysis(summary, output_root)
         debug_log "Brand analysis complete" if analysis_result
@@ -161,6 +170,11 @@ module PageMigration
         prompts.each { |p| debug_log "  - #{p}" } if @debug
 
         @prompt_runner.run(prompts, summary, output_root, additional_instructions: analysis_result)
+
+        # Report cache stats
+        if cache.enabled? && (cache.hits > 0 || cache.misses > 0)
+          puts "\n📊 Cache stats: #{cache.hits} hits, #{cache.misses} misses (#{cache.hit_rate}% hit rate)"
+        end
 
         puts "\n✅ Migration complete! Assets generated in #{output_root}/"
       end
