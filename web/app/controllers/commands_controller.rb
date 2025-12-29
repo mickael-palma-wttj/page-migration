@@ -43,7 +43,7 @@ class CommandsController < ApplicationController
   end
 
   def command_params
-    params.permit(:command, :org_ref, :format_option, :language, :languages)
+    @command_params ||= params.permit(:command, :org_ref, :format_option, :language, :languages)
   end
 
   def build_options
