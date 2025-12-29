@@ -15,9 +15,21 @@ module PageMigration
     # Output directories
     OUTPUT_ROOT = "tmp"
 
+    # Default filenames
+    QUERY_JSON = "query.json"
+    TREE_JSON = "tree.json"
+
     def self.output_dir(org_ref, org_name)
       slug = Utils.sanitize_filename(org_name)
       File.join(OUTPUT_ROOT, "#{org_ref}_#{slug}")
+    end
+
+    def self.query_json_path(org_ref, org_name)
+      File.join(output_dir(org_ref, org_name), QUERY_JSON)
+    end
+
+    def self.tree_json_path(org_ref, org_name)
+      File.join(output_dir(org_ref, org_name), TREE_JSON)
     end
   end
 end

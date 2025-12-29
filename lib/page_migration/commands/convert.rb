@@ -26,7 +26,8 @@ module PageMigration
         return @input if @input
         return Support::FileDiscovery.find_query_json!(@org_ref) if @org_ref
 
-        Support::FileDiscovery.find_latest_query_json || "tmp/query.json"
+        Support::FileDiscovery.find_latest_query_json ||
+          File.join(Config::OUTPUT_ROOT, Config::QUERY_JSON)
       end
 
       def process_org(org)

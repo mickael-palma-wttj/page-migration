@@ -45,7 +45,7 @@ module PageMigration
         base_dir = Config.output_dir(@org_ref, org_data["name"])
         case @format
         when "json"
-          File.join(base_dir, "query.json")
+          File.join(base_dir, Config::QUERY_JSON)
         when "text"
           File.join(base_dir, "contenu_#{@language}.txt")
         end

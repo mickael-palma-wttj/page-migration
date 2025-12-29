@@ -6,7 +6,7 @@ module PageMigration
     class FileDiscovery
       class << self
         def find_query_json(org_ref)
-          pattern = File.join(Config::OUTPUT_ROOT, "#{org_ref}_*", "query.json")
+          pattern = File.join(Config::OUTPUT_ROOT, "#{org_ref}_*", Config::QUERY_JSON)
           Dir.glob(pattern).first
         end
 
@@ -15,7 +15,7 @@ module PageMigration
         end
 
         def find_latest_query_json
-          pattern = File.join(Config::OUTPUT_ROOT, "*_*", "query.json")
+          pattern = File.join(Config::OUTPUT_ROOT, "*_*", Config::QUERY_JSON)
           Dir.glob(pattern).max_by { |f| File.mtime(f) }
         end
 
@@ -36,7 +36,7 @@ module PageMigration
         end
 
         def find_legacy_json(org_ref)
-          path = "tmp/#{org_ref}_organization.json"
+          path = File.join(Config::OUTPUT_ROOT, "#{org_ref}_organization.json")
           path if File.exist?(path)
         end
       end

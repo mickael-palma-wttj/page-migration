@@ -17,8 +17,7 @@ module PageMigration
 
         if @output.nil?
           org_data = JSON.parse(data)["organization"]
-          slug = Utils.sanitize_filename(org_data["name"])
-          @output = "tmp/query_result/#{@org_ref}_#{slug}/tree.json"
+          @output = Config.tree_json_path(@org_ref, org_data["name"])
         end
 
         write_output(data)
