@@ -100,11 +100,19 @@ class CommandRun < ApplicationRecord
 
   def formatted_duration
     return nil unless duration
-    return "#{duration}s" if duration < 60
 
-    minutes = (duration / 60).to_i
-    seconds = (duration % 60).round
-    "#{minutes}m #{seconds}s"
+    total_seconds = duration.to_i
+    return "#{duration.round(1)}s" if total_seconds < 60
+
+    hours = total_seconds / 3600
+    minutes = (total_seconds % 3600) / 60
+    seconds = total_seconds % 60
+
+    if hours > 0
+      "#{hours}h #{minutes}m #{seconds}s"
+    else
+      "#{minutes}m #{seconds}s"
+    end
   end
 
   # File-based output storage

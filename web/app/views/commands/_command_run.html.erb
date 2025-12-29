@@ -25,8 +25,8 @@
           </h1>
           <div class="flex items-center gap-4 mt-1 text-sm text-wttj-gray-medium">
             <span>Started: <%= command_run.started_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></span>
-            <% if command_run.duration %>
-              <span>Duration: <%= command_run.duration %>s</span>
+            <% if command_run.formatted_duration %>
+              <span>Duration: <%= command_run.formatted_duration %></span>
             <% end %>
             <span class="capitalize font-medium
               <%= case command_run.display_status

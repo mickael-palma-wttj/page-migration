@@ -30,8 +30,8 @@
                 <span class="text-wttj-gray-dark"><%= cmd.org_ref || "—" %></span>
               </div>
               <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
-                <% if cmd.duration %>
-                  <span><%= cmd.duration %>s</span>
+                <% if cmd.formatted_duration %>
+                  <span><%= cmd.formatted_duration %></span>
                 <% end %>
                 <span><%= cmd.created_at.strftime("%Y-%m-%d %H:%M") %></span>
               </div>
