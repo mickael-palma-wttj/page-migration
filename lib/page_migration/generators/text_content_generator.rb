@@ -66,22 +66,47 @@ module PageMigration
       end
 
       def extract_text_from_properties(props)
-        %w[title subtitle body content description name value].each do |key|
+        # Primary content properties
+        %w[title subtitle surtitle body content description name value].each do |key|
+          extract_localized_text(props, key)
+        end
+
+        # Labels and links (may contain meaningful text)
+        %w[label link_title topic].each do |key|
+          extract_localized_text(props, key)
+        end
+
+        # Stats/numbers with context
+        if props["percent"]
+          val = props["percent"]
+          text = val.is_a?(Hash) ? (val[@language] || val["fr"] || val["en"]) : val
+          append_text("#{text}%") if text && !text.to_s.empty?
+        end
+
+        # URLs (external links can indicate partnerships, social presence)
+        %w[link_url url].each do |key|
           val = props[key]
-          if val.is_a?(Hash)
-            text = val[@language] || val["fr"] || val["en"]
-            append_text(text) if text
-          elsif val.is_a?(String) && !val.empty?
-            append_text(val)
-          end
+          append_text(val) if val.is_a?(String) && val.start_with?("http")
+        end
+      end
+
+      def extract_localized_text(props, key)
+        val = props[key]
+        if val.is_a?(Hash)
+          text = val[@language] || val["fr"] || val["en"]
+          append_text(text) if text
+        elsif val.is_a?(String) && !val.empty?
+          append_text(val)
         end
       end
 
       def render_record(record, type)
         case type
         when "Office"
-          append_text(record["name"])
-          address = [record["address"], record["city"], record["country_code"]].compact.join(", ")
+          office_name = record["name"]
+          office_name += " (Headquarters)" if record["is_headquarter"]
+          append_text(office_name)
+          address = [record["address"], record["zip_code"], record["city"], record["country_code"]].compact.join(", ")
           append_text(address) unless address.empty?
         when "Organization"
           append_text(record["name"])

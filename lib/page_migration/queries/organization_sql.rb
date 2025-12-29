@@ -96,8 +96,10 @@ module PageMigration
                                 SELECT json_build_object(
                                   'name', ofc.name,
                                   'address', ofc.address,
+                                  'zip_code', ofc.zip_code,
                                   'city', ofc.city,
-                                  'country_code', ofc.country_code
+                                  'country_code', ofc.country_code,
+                                  'is_headquarter', ofc.is_headquarter
                                 ) FROM offices ofc WHERE ofc.id = c.record_id::bigint
                               )
                               WHEN c.record_type = 'WebsiteOrganization' THEN (
