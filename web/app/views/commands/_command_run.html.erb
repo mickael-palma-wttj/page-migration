@@ -53,6 +53,12 @@
       </div>
 
       <div class="flex gap-2">
+        <% if command_run.interruptable? %>
+          <%= button_to "Interrupt", interrupt_command_path(command_run),
+              method: :post,
+              data: { turbo_confirm: "Interrupt this command?" },
+              class: "text-sm px-3 py-1 rounded border border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-colors" %>
+        <% end %>
         <% if command_run.finished? && command_run.org_ref.present? %>
           <% export_id = find_export_id_for_org(command_run.org_ref, command_run: command_run) %>
           <% if export_id %>
@@ -65,7 +71,7 @@
           <%= link_to "Run Again", new_command_path(org_ref: command_run.org_ref, command: command_run.command),
               class: "text-sm bg-wttj-yellow hover:bg-yellow-400 text-wttj-black px-3 py-1 rounded transition-colors" %>
         <% end %>
-        <% unless command_run.running? %>
+        <% if command_run.finished? %>
           <%= button_to "Delete", command_path(command_run),
               method: :delete,
               data: { turbo_confirm: "Delete this command run and its output?" },

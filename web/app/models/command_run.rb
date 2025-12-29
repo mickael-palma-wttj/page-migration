@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CommandRun < ApplicationRecord
-  STATUSES = %w[pending running completed failed].freeze
+  STATUSES = %w[pending running completed failed interrupted].freeze
   COMMANDS = %w[extract export migrate tree health].freeze
   STALE_THRESHOLD = 5.minutes
   COMMANDS_OUTPUT_DIR = Rails.root.join("storage", "commands")
@@ -20,7 +20,8 @@ class CommandRun < ApplicationRecord
   scope :running, -> { where(status: "running") }
   scope :completed, -> { where(status: "completed") }
   scope :failed, -> { where(status: "failed") }
-  scope :finished, -> { where(status: %w[completed failed]) }
+  scope :finished, -> { where(status: %w[completed failed interrupted]) }
+  scope :interrupted, -> { where(status: "interrupted") }
   scope :stale, -> { where(status: %w[pending running]).where("updated_at < ?", STALE_THRESHOLD.ago) }
 
   # Scopes - command filters
@@ -48,8 +49,27 @@ class CommandRun < ApplicationRecord
     status == "failed"
   end
 
+  def interrupted?
+    status == "interrupted"
+  end
+
   def finished?
-    completed? || failed?
+    completed? || failed? || interrupted?
+  end
+
+  def interruptable?
+    pending? || running?
+  end
+
+  def interrupt!
+    return unless interruptable?
+
+    update!(
+      status: "interrupted",
+      completed_at: Time.current,
+      error: "Interrupted by user"
+    )
+    broadcast_update
   end
 
   def stale?
@@ -57,8 +77,17 @@ class CommandRun < ApplicationRecord
   end
 
   def display_status
-    return "interrupted" if stale?
+    return "interrupted" if stale? && !interrupted?
     status
+  end
+
+  def broadcast_update
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "command_run_#{id}",
+      target: "command_run_#{id}",
+      partial: "commands/command_run",
+      locals: {command_run: self}
+    )
   end
 
   # Duration calculation

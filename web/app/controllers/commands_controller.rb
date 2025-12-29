@@ -3,7 +3,7 @@
 class CommandsController < ApplicationController
   include PaginationDefaults
 
-  before_action :set_command_run, only: [:show, :destroy]
+  before_action :set_command_run, only: [:show, :destroy, :interrupt]
 
   def index
     @pagy, @command_runs = pagy(CommandRun.recent, limit: COMMANDS_PER_PAGE)
@@ -34,6 +34,15 @@ class CommandsController < ApplicationController
   def destroy
     @command_run.destroy
     redirect_to commands_path, notice: "Command run deleted"
+  end
+
+  def interrupt
+    if @command_run.running? || @command_run.pending?
+      @command_run.interrupt!
+      redirect_to command_path(@command_run), notice: "Command interrupted"
+    else
+      redirect_to command_path(@command_run), alert: "Command is not running"
+    end
   end
 
   private

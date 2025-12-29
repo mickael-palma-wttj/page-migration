@@ -10,7 +10,11 @@ Rails.application.routes.draw do
   end
 
   # Command execution
-  resources :commands, only: [:index, :new, :create, :show, :destroy]
+  resources :commands, only: [:index, :new, :create, :show, :destroy] do
+    member do
+      post :interrupt
+    end
+  end
 
   # Export browser
   resources :exports, only: [:index, :show] do

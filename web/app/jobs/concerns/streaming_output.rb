@@ -3,6 +3,9 @@
 module StreamingOutput
   extend ActiveSupport::Concern
 
+  # Custom error for job interruption
+  class InterruptedError < StandardError; end
+
   private
 
   def execute_with_streaming(command_run)
@@ -22,20 +25,36 @@ module StreamingOutput
     begin
       yield
       streaming_io.flush # Final flush before completing
-      command_run.update!(status: "completed", completed_at: Time.current)
+      # Check if interrupted before marking complete
+      command_run.reload
+      unless command_run.interrupted?
+        command_run.update!(status: "completed", completed_at: Time.current)
+      end
+    rescue InterruptedError
+      streaming_io.flush
+      # Already marked as interrupted, just log
+      command_run.append_output("\n⚠️ Command interrupted by user\n")
     rescue => e
       streaming_io.flush
-      command_run.update!(
-        status: "failed",
-        completed_at: Time.current,
-        error: "#{e.class}: #{e.message}\n#{e.backtrace&.first(10)&.join("\n")}"
-      )
+      command_run.reload
+      unless command_run.interrupted?
+        command_run.update!(
+          status: "failed",
+          completed_at: Time.current,
+          error: "#{e.class}: #{e.message}\n#{e.backtrace&.first(10)&.join("\n")}"
+        )
+      end
     ensure
       $stdout = original_stdout
       $stderr = original_stderr
     end
 
     broadcast_update(command_run)
+  end
+
+  def check_interrupted!(command_run)
+    command_run.reload
+    raise InterruptedError if command_run.interrupted?
   end
 
   def broadcast_update(command_run)
