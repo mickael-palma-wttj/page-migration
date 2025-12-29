@@ -8,6 +8,10 @@ fi
 # Default to port 3000 if not specified
 export PORT="${PORT:-3000}"
 
+# Unset DATABASE_URL to ensure Rails uses database.yml (SQLite)
+# The PageMigration library uses PAGE_MIGRATION_DATABASE_URL constant instead
+unset DATABASE_URL
+
 # Let the debug gem allow remote connections,
 # but avoid loading until `debugger` is called
 export RUBY_DEBUG_OPEN="true"
