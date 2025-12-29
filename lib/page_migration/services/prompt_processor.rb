@@ -148,13 +148,13 @@ module PageMigration
           parse_plain_markdown(content, path)
         end
       rescue JSON::ParserError => e
-        raise ParseError.new("Failed to parse JSON: #{e.message}", file_path: path)
+        raise Errors::ParseError.new("Failed to parse JSON: #{e.message}", file_path: path)
       end
 
       def parse_yaml_frontmatter(content, path)
         # Split on frontmatter delimiters
         parts = content.split(/^---\s*$/, 3)
-        raise ParseError.new("Invalid YAML frontmatter", file_path: path) if parts.length < 3
+        raise Errors::ParseError.new("Invalid YAML frontmatter", file_path: path) if parts.length < 3
 
         frontmatter = YAML.safe_load(parts[1])
         body = parts[2].strip
@@ -163,7 +163,7 @@ module PageMigration
         frontmatter["content"] = body
         frontmatter
       rescue Psych::SyntaxError => e
-        raise ParseError.new("Failed to parse YAML frontmatter: #{e.message}", file_path: path)
+        raise Errors::ParseError.new("Failed to parse YAML frontmatter: #{e.message}", file_path: path)
       end
 
       def parse_plain_markdown(content, path)

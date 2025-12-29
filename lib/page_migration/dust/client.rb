@@ -102,7 +102,7 @@ module PageMigration
 
       def handle_response(response)
         unless response.is_a?(Net::HTTPSuccess)
-          raise DustApiError.new(
+          raise Errors::DustApiError.new(
             "Dust API Error: #{response.code}",
             status: response.code.to_i,
             response_body: response.body
