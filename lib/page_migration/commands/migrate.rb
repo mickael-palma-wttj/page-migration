@@ -12,11 +12,14 @@ module PageMigration
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
       ANALYSIS_PROMPT = File.expand_path("../prompts/analysis.prompt.md", __dir__)
 
-      def initialize(org_ref, language: "fr", debug: false, analysis: false)
+      def initialize(org_ref, language: "fr", debug: false, analysis: false, dry_run: false)
         @org_ref = org_ref
         @language = language
         @debug = debug
         @analysis_only = analysis
+        @dry_run = dry_run
+
+        return if @dry_run
 
         @client = PageMigration::Dust::Client.new(
           ENV.fetch("DUST_WORKSPACE_ID"),
@@ -31,6 +34,12 @@ module PageMigration
 
       def call
         org_data = load_org_data
+
+        if @dry_run
+          run_dry_run(org_data)
+          return
+        end
+
         txt_file = ensure_text_exported(org_data)
 
         puts "📖 Using content from: #{txt_file}"
@@ -49,6 +58,37 @@ module PageMigration
       end
 
       private
+
+      def run_dry_run(org_data)
+        puts "🔍 Dry run mode - showing what would be executed\n\n"
+
+        output_dir = Config.output_dir(@org_ref, org_data["name"])
+        txt_file = find_exported_txt(org_data)
+
+        puts "📋 Configuration:"
+        puts "   Organization: #{org_data["name"]} (#{@org_ref})"
+        puts "   Language: #{@language}"
+        puts "   Output directory: #{output_dir}"
+        puts "   Text content: #{txt_file || "(would be generated)"}"
+        puts ""
+
+        if @analysis_only
+          puts "📊 Analysis mode:"
+          puts "   Would run: #{ANALYSIS_PROMPT}"
+          puts "   Output: #{File.join(output_dir, "analysis.md")}"
+        else
+          prompts = Dir.glob(File.join(PROMPTS_DIR, "**/*.prompt.md")).sort
+          prompts.reject! { |p| p.include?("file_analysis.prompt.md") }
+
+          puts "📝 Prompts to process (#{prompts.length}):"
+          prompts.each_with_index do |prompt, idx|
+            name = File.basename(prompt, ".prompt.md")
+            puts "   #{idx + 1}. #{name}"
+          end
+        end
+
+        puts "\n✅ Dry run complete - no changes made"
+      end
 
       def run_analysis_only(org_data, content_summary)
         puts "\n📊 Running page migration fit analysis..."
