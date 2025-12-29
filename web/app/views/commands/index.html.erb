@@ -10,7 +10,7 @@
     <% if @command_runs.any? %>
       <div class="divide-y divide-wttj-gray-light">
         <% @command_runs.each do |cmd| %>
-          <div class="flex items-center justify-between p-4 hover:bg-wttj-beige transition-colors">
+          <div class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
             <%= link_to command_path(cmd), class: "flex-1 flex items-center justify-between" do %>
               <div class="flex items-center gap-4">
                 <% case cmd.display_status %>
