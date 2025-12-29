@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "net/http"
+
 class ApplicationJob < ActiveJob::Base
   # Retry on database deadlock with exponential backoff
   retry_on ActiveRecord::Deadlocked, wait: :polynomially_longer, attempts: 3
