@@ -1,18 +1,24 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
+  include Pagy::Backend
+
   SIZES = %w[big medium small].freeze
-  DEFAULT_LIMIT = 50
+  PER_PAGE = 50
 
   def index
     @size = params[:size] if SIZES.include?(params[:size])
-    @limit = (params[:limit] || DEFAULT_LIMIT).to_i.clamp(1, 500)
-    @organizations = OrganizationQuery.stats(size: @size, limit: @limit)
-    @summary = calculate_summary(@organizations)
+    all_organizations = OrganizationQuery.stats(size: @size, limit: nil)
+    @summary = calculate_summary(all_organizations)
 
     respond_to do |format|
-      format.html
-      format.csv { send_csv }
+      format.html do
+        @pagy, @organizations = pagy_array(all_organizations, limit: PER_PAGE)
+      end
+      format.csv do
+        @organizations = all_organizations
+        send_csv
+      end
     end
   rescue => e
     flash.now[:alert] = "Database error: #{e.message}"

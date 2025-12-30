@@ -3,7 +3,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-3xl font-bold text-wttj-black">Organization Stats</h1>
-    <%= link_to "Export CSV", stats_path(format: :csv, size: @size, limit: @limit),
+    <%= link_to "Export CSV", stats_path(format: :csv, size: @size),
         class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
   </div>
 
@@ -17,14 +17,7 @@
             {},
             class: "px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none" %>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-wttj-gray-dark mb-1">Limit</label>
-        <%= f.select :limit,
-            options_for_select([[50, 50], [100, 100], [200, 200], [500, 500]], @limit),
-            {},
-            class: "px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none" %>
-      </div>
-      <%= f.submit "Apply",
+      <%= f.submit "Filter",
           class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-6 py-2 rounded-lg transition-colors cursor-pointer" %>
     <% end %>
   </div>
@@ -103,5 +96,7 @@
         No organizations found
       </div>
     <% end %>
+
+    <%= render "shared/pagination" %>
   </div>
 </div>

@@ -39,12 +39,12 @@ class OrganizationQuery
       nil
     end
 
-    def stats(size: nil, limit: 50)
+    def stats(size: nil, limit: nil)
       PageMigration::Database.with_connection do |conn|
         result = conn.exec(stats_query)
         rows = result.map { |row| build_stats_row(row) }
         rows = rows.select { |r| r[:size_category] == size } if size.present?
-        rows.first(limit)
+        limit ? rows.first(limit) : rows
       end
     rescue => e
       Rails.logger.error "[OrganizationQuery] Stats failed: #{e.message}"
