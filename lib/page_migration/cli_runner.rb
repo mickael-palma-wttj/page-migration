@@ -131,10 +131,7 @@ module PageMigration
     end
 
     def run_app
-      parser = build_app_parser
-      parser.parse!(@args)
-
-      Commands::App.new(**@options).call
+      run_command(build_app_parser, Commands::App)
     end
 
     def build_app_parser
@@ -149,10 +146,7 @@ module PageMigration
     end
 
     def run_stats
-      parser = build_stats_parser
-      parser.parse!(@args)
-
-      Commands::Stats.new(**@options).call
+      run_command(build_stats_parser, Commands::Stats)
     end
 
     def build_stats_parser
@@ -172,6 +166,11 @@ module PageMigration
     def show_help(error = nil)
       puts "Error: #{error}\n\n" if error
       puts HELP_TEXT
+    end
+
+    def run_command(parser, command_class)
+      parser.parse!(@args)
+      command_class.new(**@options).call
     end
 
     def run_with_org_ref(parser)
