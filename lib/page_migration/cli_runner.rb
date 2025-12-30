@@ -194,6 +194,14 @@ module PageMigration
       puts HELP_TEXT
     end
 
+    def run_with_org_ref(parser)
+      parser.parse!(@args)
+      org_ref = validate_org_ref(@args.shift, parser)
+      yield org_ref
+    rescue Errors::ValidationError => e
+      abort "Error: #{e.message}"
+    end
+
     def validate_org_ref(org_ref, parser)
       Validator.validate_org_ref!(org_ref)
     rescue Errors::ValidationError => e
