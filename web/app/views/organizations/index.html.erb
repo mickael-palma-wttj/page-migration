@@ -34,14 +34,14 @@
       <% if @organizations&.any? %>
         <div class="divide-y divide-wttj-gray-light">
           <% @organizations.each do |org| %>
-            <%= link_to organization_path(org[:reference]), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
+            <%= link_to organization_path(org.reference), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
-                    <%= org[:reference] %>
+                    <%= org.reference %>
                   </span>
-                  <h3 class="font-medium text-wttj-black"><%= org[:name] %></h3>
-                  <% if org[:has_export] %>
+                  <h3 class="font-medium text-wttj-black"><%= org.name %></h3>
+                  <% if org.has_export? %>
                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Export</span>
                   <% end %>
                 </div>
@@ -72,19 +72,19 @@
       <% if @recent_orgs&.any? %>
         <div class="divide-y divide-wttj-gray-light">
           <% @recent_orgs.each do |org| %>
-            <%= link_to organization_path(org[:reference]), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
+            <%= link_to organization_path(org.reference), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
-                    <%= org[:reference] %>
+                    <%= org.reference %>
                   </span>
-                  <h3 class="font-medium text-wttj-black"><%= org[:name] %></h3>
-                  <% if org[:has_export] %>
+                  <h3 class="font-medium text-wttj-black"><%= org.name %></h3>
+                  <% if org.has_export? %>
                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Export</span>
                   <% end %>
                 </div>
                 <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
-                  <span class="text-xs"><%= time_ago_in_words(org[:last_command_at]) %> ago</span>
+                  <span class="text-xs"><%= time_ago_in_words(org.last_command_at) %> ago</span>
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                   </svg>

@@ -1,15 +1,20 @@
 # frozen_string_literal: true
 
 class OrganizationsController < ApplicationController
-  include ExportFinder
   include PaginationDefaults
 
   before_action :set_org_ref, only: [:show]
 
   def index
     @query = params[:q].to_s.strip
-    @organizations = search_with_export_status if @query.present?
-    @recent_orgs = recent_organizations unless @query.present?
+    if @query.present?
+      @organizations = Organization.search(@query, limit: ORG_SEARCH_LIMIT, include_export_status: true)
+    else
+      @recent_orgs = Organization.recent_from_commands(limit: RECENT_ORGS_LIMIT)
+    end
+  rescue => e
+    flash.now[:alert] = "Database connection error: #{e.message}"
+    @organizations = []
   end
 
   def search
@@ -22,7 +27,7 @@ class OrganizationsController < ApplicationController
   end
 
   def show
-    @organization = OrganizationQuery.find_by_reference(@org_ref)
+    @organization = Organization.find_by_reference(@org_ref)
     @current_tab = params[:tab]
     scope = CommandRun.where(org_ref: @org_ref)
     scope = scope.by_command(@current_tab) if @current_tab.present?
@@ -33,34 +38,5 @@ class OrganizationsController < ApplicationController
 
   def set_org_ref
     @org_ref = params[:id]
-  end
-
-  def search_with_export_status
-    OrganizationQuery.search(@query, limit: ORG_SEARCH_LIMIT).map do |org|
-      org.merge(has_export: export_exists?(org[:reference]))
-    end
-  rescue => e
-    flash.now[:alert] = "Database connection error: #{e.message}"
-    []
-  end
-
-  def recent_organizations
-    CommandRun.where.not(org_ref: [nil, ""])
-      .select(:org_ref)
-      .group(:org_ref)
-      .order(Arel.sql("MAX(created_at) DESC"))
-      .limit(RECENT_ORGS_LIMIT)
-      .map do |cmd|
-        org = OrganizationQuery.find_by_reference(cmd.org_ref)
-        {
-          reference: cmd.org_ref,
-          name: org&.dig(:name) || cmd.org_ref,
-          has_export: export_exists?(cmd.org_ref),
-          last_command_at: CommandRun.where(org_ref: cmd.org_ref).maximum(:created_at)
-        }
-      end
-  rescue => e
-    Rails.logger.error("Failed to fetch recent organizations: #{e.message}")
-    []
   end
 end
