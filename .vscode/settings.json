@@ -1,0 +1,12 @@
+{
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.profiles.osx": {
+    "zsh": {
+      "path": "/bin/zsh",
+      "args": ["-l", "-i"]
+    }
+  },
+  "terminal.integrated.env.osx": {
+    "PATH": "${env:HOME}/.asdf/shims:${env:HOME}/.asdf/bin:${env:PATH}"
+  }
+}
