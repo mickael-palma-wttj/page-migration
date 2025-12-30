@@ -6,6 +6,16 @@
     <%= link_to "Run Command", new_command_path, class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
   </div>
 
+  <!-- Command Tabs -->
+  <div class="flex gap-2 border-b border-wttj-gray-light">
+    <%= link_to "All", commands_path,
+        class: "px-4 py-2 font-medium transition-colors #{@current_tab.blank? ? 'text-wttj-black border-b-2 border-wttj-yellow' : 'text-wttj-gray-dark hover:text-wttj-black'}" %>
+    <% CommandRun::COMMANDS.each do |cmd| %>
+      <%= link_to cmd.capitalize, commands_path(tab: cmd),
+          class: "px-4 py-2 font-medium transition-colors #{@current_tab == cmd ? 'text-wttj-black border-b-2 border-wttj-yellow' : 'text-wttj-gray-dark hover:text-wttj-black'}" %>
+    <% end %>
+  </div>
+
   <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
     <% if @command_runs.any? %>
       <div class="divide-y divide-wttj-gray-light">

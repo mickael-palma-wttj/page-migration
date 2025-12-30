@@ -1,65 +1,18 @@
 # frozen_string_literal: true
 
+require_relative "streaming_io"
+
 module StreamingOutput
   extend ActiveSupport::Concern
 
-  # Custom error for job interruption
   class InterruptedError < StandardError; end
 
   private
 
   def execute_with_streaming(command_run)
-    command_run.ensure_output_directory
-    command_run.output = ""
-    command_run.update!(status: "running", started_at: Time.current)
-    broadcast_update(command_run)
-
-    original_stdout = $stdout
-    original_stderr = $stderr
-
-    # Create a custom IO that captures and streams output to file
-    streaming_io = StreamingIO.new(command_run)
-    $stdout = streaming_io
-    $stderr = streaming_io
-
-    begin
-      yield
-      # Suppress partial broadcasts before final state change
-      # The full partial will be broadcast after status update
-      streaming_io.suppress_broadcast!
-      streaming_io.flush
-      # Check if interrupted before marking complete
-      command_run.reload
-      unless command_run.interrupted?
-        command_run.update!(status: "completed", completed_at: Time.current)
-      end
-    rescue InterruptedError
-      streaming_io.suppress_broadcast!
-      streaming_io.flush
-      # Already marked as interrupted, just log
-      command_run.append_output("\n⚠️ Command interrupted by user\n")
-    rescue => e
-      streaming_io.suppress_broadcast!
-      streaming_io.flush
-      command_run.reload
-      unless command_run.interrupted?
-        command_run.update!(
-          status: "failed",
-          completed_at: Time.current,
-          error: "#{e.class}: #{e.message}\n#{e.backtrace&.first(10)&.join("\n")}"
-        )
-      end
-    ensure
-      $stdout = original_stdout
-      $stderr = original_stderr
-    end
-
-    # Reload to get the latest status before broadcasting the final state
-    command_run.reload
-    # Small delay to ensure WebSocket subscription is established
-    # (race condition: job may complete before client subscribes)
-    sleep(0.2)
-    broadcast_update(command_run)
+    setup_command(command_run)
+    streaming_io = capture_output(command_run) { yield }
+    finalize_command(command_run, streaming_io)
   end
 
   def check_interrupted!(command_run)
@@ -68,103 +21,70 @@ module StreamingOutput
   end
 
   def broadcast_update(command_run)
-    # Delegate to the model's broadcast_update which uses ApplicationController.render
-    # for full helper context (needed for export file listing)
     command_run.broadcast_update
   end
 
-  # Custom IO class that streams output in real-time to file
-  class StreamingIO
-    BROADCAST_INTERVAL = 0.3 # seconds - faster updates
+  def setup_command(command_run)
+    command_run.ensure_output_directory
+    command_run.output = ""
+    command_run.update!(status: "running", started_at: Time.current)
+    broadcast_update(command_run)
+  end
 
-    def initialize(command_run)
-      @command_run = command_run
-      @buffer = StringIO.new
-      @last_broadcast = Time.current
-      @mutex = Mutex.new
-      @suppress_broadcast = false
+  def capture_output(command_run)
+    original_stdout, original_stderr = $stdout, $stderr
+    streaming_io = StreamingIO.new(command_run)
+    $stdout = $stderr = streaming_io
+
+    begin
+      yield
+      handle_success(command_run, streaming_io)
+    rescue InterruptedError
+      handle_interruption(command_run, streaming_io)
+    rescue => e
+      handle_error(command_run, streaming_io, e)
+    ensure
+      $stdout, $stderr = original_stdout, original_stderr
     end
 
-    def suppress_broadcast!
-      @suppress_broadcast = true
-    end
+    streaming_io
+  end
 
-    def write(str)
-      return 0 if str.nil?
-      str = str.to_s
-      @mutex.synchronize do
-        @buffer.write(str)
-        # Append to file immediately
-        @command_run.append_output(str)
+  def handle_success(command_run, streaming_io)
+    streaming_io.suppress_broadcast!
+    streaming_io.flush
+    command_run.reload
+    return if command_run.interrupted?
 
-        # Broadcast periodically to avoid overwhelming the client
-        if Time.current - @last_broadcast >= BROADCAST_INTERVAL
-          broadcast_current_output
-          @last_broadcast = Time.current
-        end
-      end
-      str.bytesize # Return bytes written (required by IO interface)
-    end
+    command_run.update!(status: "completed", completed_at: Time.current)
+  end
 
-    def <<(str)
-      write(str)
-      self
-    end
+  def handle_interruption(command_run, streaming_io)
+    streaming_io.suppress_broadcast!
+    streaming_io.flush
+    command_run.append_output("\n⚠️ Command interrupted by user\n")
+  end
 
-    def puts(*args)
-      if args.empty?
-        write("\n")
-      else
-        args.each { |arg| write("#{arg}\n") }
-      end
-      nil
-    end
+  def handle_error(command_run, streaming_io, error)
+    streaming_io.suppress_broadcast!
+    streaming_io.flush
+    command_run.reload
+    return if command_run.interrupted?
 
-    def print(*args)
-      args.each { |arg| write(arg.to_s) }
-      nil
-    end
+    command_run.update!(
+      status: "failed",
+      completed_at: Time.current,
+      error: format_error(error)
+    )
+  end
 
-    def printf(format, *args)
-      write(format % args)
-      nil
-    end
+  def format_error(error)
+    "#{error.class}: #{error.message}\n#{error.backtrace&.first(10)&.join("\n")}"
+  end
 
-    def flush
-      @mutex.synchronize do
-        broadcast_current_output
-      end
-      self
-    end
-
-    def sync
-      true
-    end
-
-    def sync=(value)
-      # ignore, always sync
-    end
-
-    def tty?
-      false
-    end
-
-    def isatty
-      false
-    end
-
-    private
-
-    def broadcast_current_output
-      return if @suppress_broadcast
-
-      output = @command_run.output || ""
-      # Only update the output div, not the entire partial (to avoid huge payloads)
-      Turbo::StreamsChannel.broadcast_replace_to(
-        "command_run_#{@command_run.id}",
-        target: "output",
-        html: "<div id=\"output\" data-auto-scroll-target=\"output\" class=\"text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto\">#{ERB::Util.html_escape(output.strip)}</div>"
-      )
-    end
+  def finalize_command(command_run, _streaming_io)
+    command_run.reload
+    sleep(0.2) # Allow WebSocket subscription to establish
+    broadcast_update(command_run)
   end
 end

@@ -3,10 +3,21 @@
 class CommandsController < ApplicationController
   include PaginationDefaults
 
+  COMMAND_JOBS = {
+    "extract" => ExtractJob,
+    "export" => ExportJob,
+    "migrate" => MigrateJob,
+    "analysis" => AnalysisJob,
+    "tree" => TreeJob,
+    "health" => HealthJob
+  }.freeze
+
   before_action :set_command_run, only: [:show, :destroy, :interrupt]
 
   def index
-    @pagy, @command_runs = pagy(CommandRun.recent, limit: COMMANDS_PER_PAGE)
+    @current_tab = params[:tab]
+    scope = @current_tab.present? ? CommandRun.by_command(@current_tab).recent : CommandRun.recent
+    @pagy, @command_runs = pagy(scope, limit: COMMANDS_PER_PAGE)
   end
 
   def new
@@ -22,7 +33,9 @@ class CommandsController < ApplicationController
       status: "pending"
     )
 
-    job_class = job_for_command(@command_run.command)
+    job_class = COMMAND_JOBS.fetch(@command_run.command) do
+      raise ArgumentError, "Unknown command: #{@command_run.command}"
+    end
     job_class.perform_later(@command_run.id, @command_run.org_ref, @command_run.options)
 
     redirect_to command_path(@command_run), notice: "Command queued for execution"
@@ -37,7 +50,7 @@ class CommandsController < ApplicationController
   end
 
   def interrupt
-    if @command_run.running? || @command_run.pending?
+    if @command_run.interruptable?
       @command_run.interrupt!
       redirect_to command_path(@command_run), notice: "Command interrupted"
     else
@@ -56,22 +69,10 @@ class CommandsController < ApplicationController
   end
 
   def build_options
-    options = {}
-    options[:format] = command_params[:format_option] if command_params[:format_option].present?
-    options[:language] = command_params[:language] if command_params[:language].present?
-    options[:languages] = command_params[:languages].split(",").map(&:strip) if command_params[:languages].present?
-    options
-  end
-
-  def job_for_command(command)
-    case command
-    when "extract" then ExtractJob
-    when "export" then ExportJob
-    when "migrate" then MigrateJob
-    when "tree" then TreeJob
-    when "health" then HealthJob
-    else
-      raise ArgumentError, "Unknown command: #{command}"
+    {}.tap do |opts|
+      opts[:format] = command_params[:format_option] if command_params[:format_option].present?
+      opts[:language] = command_params[:language] if command_params[:language].present?
+      opts[:languages] = command_params[:languages].split(",").map(&:strip) if command_params[:languages].present?
     end
   end
 end

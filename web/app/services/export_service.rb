@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
 class ExportService
+  FILE_TYPES = {
+    ".json" => :json,
+    ".md" => :markdown,
+    ".markdown" => :markdown
+  }.freeze
+
+  LEXERS = {
+    json: Rouge::Lexers::JSON,
+    markdown: Rouge::Lexers::Markdown,
+    text: Rouge::Lexers::PlainText
+  }.freeze
+
   class << self
     def find_path(id)
       if id.include?(":")
@@ -17,12 +29,8 @@ class ExportService
     end
 
     def extract_org_ref(id)
-      if id.include?(":")
-        _, export_name = id.split(":", 2)
-        export_name.split("_").first
-      else
-        id.split("_").first
-      end
+      _, export_name = id.include?(":") ? id.split(":", 2) : [nil, id]
+      export_name.split("_").first
     end
 
     def find_command_run(id)
@@ -34,7 +42,6 @@ class ExportService
 
     def list(scope: CommandRun.completed, limit: nil, org_ref: nil, include_files: false)
       exports = []
-
       query = scope.order(created_at: :desc)
       query = query.limit(limit) if limit
 
@@ -68,7 +75,46 @@ class ExportService
         .sort_by { |f| f[:path] }
     end
 
+    def find_export_id_for_org(org_ref, command_run: nil)
+      export_dir = find_latest_export_dir(org_ref, command_run: command_run)
+      return nil unless export_dir
+
+      folder_name = File.basename(export_dir)
+      command_run ? "#{command_run.id}:#{folder_name}" : folder_name
+    end
+
+    def find_export_files_for_org(org_ref, command_run: nil)
+      export_dir = find_latest_export_dir(org_ref, command_run: command_run)
+      return [] unless export_dir
+
+      folder_name = File.basename(export_dir)
+      export_id = command_run ? "#{command_run.id}:#{folder_name}" : folder_name
+
+      Dir.glob(File.join(export_dir, "**/*"))
+        .select { |f| File.file?(f) }
+        .map { |file| build_file_info(file, export_dir).merge(export_id: export_id) }
+        .sort_by { |f| f[:path] }
+    end
+
+    def detect_file_type(filename)
+      FILE_TYPES.fetch(File.extname(filename).downcase, :text)
+    end
+
+    def highlight(content, type)
+      lexer = LEXERS.fetch(type, LEXERS[:text]).new
+      Rouge::Formatters::HTML.new.format(lexer.lex(content))
+    end
+
     private
+
+    def find_latest_export_dir(org_ref, command_run: nil)
+      output_dir = command_run&.export_data_directory&.to_s || PageMigration::Config::DEFAULT_OUTPUT_ROOT
+      return nil unless Dir.exist?(output_dir)
+
+      Dir.glob(File.join(output_dir, "#{org_ref}_*"))
+        .select { |d| File.directory?(d) }
+        .max_by { |d| File.mtime(d) }
+    end
 
     def build_entry(cmd, dir, include_files: false)
       name = File.basename(dir)
@@ -93,18 +139,11 @@ class ExportService
       {
         name: File.basename(file),
         path: file.sub("#{export_path}/", ""),
+        full_path: file,
         size: File.size(file),
         type: detect_file_type(file),
         modified_at: File.mtime(file)
       }
-    end
-
-    def detect_file_type(filename)
-      case File.extname(filename).downcase
-      when ".json" then :json
-      when ".md", ".markdown" then :markdown
-      else :text
-      end
     end
   end
 end

@@ -7,6 +7,42 @@
     <%= link_to "Run Command", new_command_path, class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
   </div>
 
+  <!-- Quick Actions -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+    <h2 class="text-xl font-semibold text-wttj-black mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <%= link_to new_command_path(command: "extract"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📥</span>
+        <span class="font-medium text-wttj-black">Extract</span>
+        <span class="text-xs text-wttj-gray-dark">Get org data</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "export"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📄</span>
+        <span class="font-medium text-wttj-black">Export</span>
+        <span class="text-xs text-wttj-gray-dark">Generate Markdown</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "migrate"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">🤖</span>
+        <span class="font-medium text-wttj-black">Migrate</span>
+        <span class="text-xs text-wttj-gray-dark">Run AI prompts</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "analysis"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📊</span>
+        <span class="font-medium text-wttj-black">Analysis</span>
+        <span class="text-xs text-wttj-gray-dark">Analyze pages</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "health"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">🔧</span>
+        <span class="font-medium text-wttj-black">Health</span>
+        <span class="text-xs text-wttj-gray-dark">Check setup</span>
+      <% end %>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Recent Commands -->
     <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
@@ -58,7 +94,7 @@
       <% if @exports.any? %>
         <div class="space-y-3">
           <% @exports.each do |export| %>
-            <%= link_to export_path(export[:name]), class: "block p-3 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" do %>
+            <%= link_to export_path(export[:id]), class: "block p-3 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" do %>
               <div class="flex items-center justify-between">
                 <div>
                   <span class="font-mono text-sm"><%= export[:org_ref] %></span>
@@ -71,36 +107,6 @@
         </div>
       <% else %>
         <p class="text-wttj-gray-dark text-center py-8">No exports found</p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
-    <h2 class="text-xl font-semibold text-wttj-black mb-4">Quick Actions</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <%= link_to new_command_path(command: "extract"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
-        <span class="text-2xl mb-2">📥</span>
-        <span class="font-medium text-wttj-black">Extract</span>
-        <span class="text-xs text-wttj-gray-dark">Get org data</span>
-      <% end %>
-
-      <%= link_to new_command_path(command: "export"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
-        <span class="text-2xl mb-2">📄</span>
-        <span class="font-medium text-wttj-black">Export</span>
-        <span class="text-xs text-wttj-gray-dark">Generate Markdown</span>
-      <% end %>
-
-      <%= link_to new_command_path(command: "migrate"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
-        <span class="text-2xl mb-2">🤖</span>
-        <span class="font-medium text-wttj-black">Migrate</span>
-        <span class="text-xs text-wttj-gray-dark">Run AI prompts</span>
-      <% end %>
-
-      <%= link_to new_command_path(command: "health"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
-        <span class="text-2xl mb-2">🔧</span>
-        <span class="font-medium text-wttj-black">Health</span>
-        <span class="text-xs text-wttj-gray-dark">Check setup</span>
       <% end %>
     </div>
   </div>

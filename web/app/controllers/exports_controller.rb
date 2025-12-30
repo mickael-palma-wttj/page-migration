@@ -16,8 +16,7 @@ class ExportsController < ApplicationController
   end
 
   def file
-    file_path = params[:path]
-    full_path = File.join(@export_path, file_path)
+    full_path = File.join(@export_path, params[:path])
 
     unless valid_file_path?(full_path)
       return redirect_to export_path(params[:id]), alert: "File not found"
@@ -25,8 +24,8 @@ class ExportsController < ApplicationController
 
     @file_name = File.basename(full_path)
     @file_content = File.read(full_path)
-    @file_type = detect_file_type(@file_name)
-    @highlighted_content = highlight_content(@file_content, @file_type)
+    @file_type = ExportService.detect_file_type(@file_name)
+    @highlighted_content = ExportService.highlight(@file_content, @file_type)
 
     render "file", formats: [:html]
   end
@@ -40,27 +39,5 @@ class ExportsController < ApplicationController
 
   def valid_file_path?(full_path)
     File.exist?(full_path) && full_path.start_with?(@export_path)
-  end
-
-  def detect_file_type(filename)
-    case File.extname(filename).downcase
-    when ".json" then :json
-    when ".md", ".markdown" then :markdown
-    else :text
-    end
-  end
-
-  def highlight_content(content, type)
-    lexer = lexer_for_type(type)
-    formatter = Rouge::Formatters::HTML.new
-    formatter.format(lexer.lex(content))
-  end
-
-  def lexer_for_type(type)
-    case type
-    when :json then Rouge::Lexers::JSON.new
-    when :markdown then Rouge::Lexers::Markdown.new
-    else Rouge::Lexers::PlainText.new
-    end
   end
 end

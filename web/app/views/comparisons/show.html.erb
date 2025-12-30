@@ -60,32 +60,18 @@
     <h1 class="text-3xl font-bold text-wttj-black">Compare: <%= @org_ref %></h1>
   </div>
 
-  <!-- Filters -->
-  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4">
-    <div class="flex flex-wrap items-center gap-4">
-      <!-- Language -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-wttj-gray-dark">Language:</span>
-        <% %w[fr en].each do |lang| %>
-          <%= link_to lang.upcase, comparison_path(params[:id], language: lang),
-              class: "px-3 py-1 rounded text-sm #{@language == lang ? 'bg-wttj-yellow text-wttj-black font-medium' : 'bg-wttj-beige text-wttj-gray-dark hover:bg-wttj-gray-light'} transition-colors" %>
-        <% end %>
-      </div>
-    </div>
-  </div>
-
   <!-- Split Pane Comparison -->
   <div class="split-pane">
     <!-- Source Data (Left) -->
     <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light overflow-hidden" data-controller="page-filter accordion">
-      <div class="bg-wttj-beige p-3 border-b border-wttj-gray-light">
+      <div class="bg-wttj-gray-darker p-3 border-b border-wttj-gray-light">
         <div class="flex items-center justify-between mb-2">
           <div>
-            <h2 class="font-semibold text-wttj-black">Source Data</h2>
-            <p class="text-xs text-wttj-gray-dark">contenu_<%= @language %>.json</p>
+            <h2 class="font-semibold text-white">Source Data</h2>
+            <p class="text-xs text-wttj-gray-light">contenu_<%= @language %>.json</p>
           </div>
           <% if @source_data && @source_data["pages"]&.any? %>
-            <span class="text-xs text-wttj-gray-dark" data-page-filter-target="count"><%= @source_data["pages"].count %> / <%= @source_data["pages"].count %></span>
+            <span class="text-xs text-wttj-gray-light" data-page-filter-target="count"><%= @source_data["pages"].count %> / <%= @source_data["pages"].count %></span>
           <% end %>
         </div>
         <% if @source_data && @source_data["pages"]&.any? %>
