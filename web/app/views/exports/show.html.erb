@@ -9,7 +9,9 @@
   <div class="flex items-center justify-between">
     <h1 class="text-3xl font-bold text-wttj-black">Export: <%= @org_ref %></h1>
     <div class="flex gap-2">
-      <%= link_to "Compare", comparison_path(params[:id]), class: "px-4 py-2 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+      <% if @command_run&.command == "migrate" %>
+        <%= link_to "Compare", comparison_path(params[:id]), class: "px-4 py-2 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+      <% end %>
       <%= link_to "Run Migrate", new_command_path(org_ref: @org_ref, command: "migrate"), class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
     </div>
   </div>
