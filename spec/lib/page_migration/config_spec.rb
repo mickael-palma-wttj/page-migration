@@ -38,9 +38,30 @@ RSpec.describe PageMigration::Config do
     end
   end
 
-  describe "OUTPUT_ROOT" do
-    it "defines the root output directory" do
-      expect(described_class::OUTPUT_ROOT).to eq("tmp")
+  describe "DEFAULT_OUTPUT_ROOT" do
+    it "defines the default root output directory" do
+      expect(described_class::DEFAULT_OUTPUT_ROOT).to eq("tmp")
+    end
+  end
+
+  describe ".output_root" do
+    it "returns the default when not overridden" do
+      expect(described_class.output_root).to eq("tmp")
+    end
+
+    it "can be set via thread-local" do
+      described_class.output_root = "/custom/path"
+      expect(described_class.output_root).to eq("/custom/path")
+      described_class.output_root = nil
+    end
+  end
+
+  describe ".with_output_root" do
+    it "temporarily sets the output root" do
+      described_class.with_output_root("/temp/path") do
+        expect(described_class.output_root).to eq("/temp/path")
+      end
+      expect(described_class.output_root).to eq("tmp")
     end
   end
 
@@ -51,6 +72,12 @@ RSpec.describe PageMigration::Config do
 
     it "sanitizes the org name" do
       expect(described_class.output_dir("Pg4eV6k", "Company/With:Bad*Chars")).to eq("tmp/Pg4eV6k_company_with_bad_chars")
+    end
+
+    it "uses the custom output root when set" do
+      described_class.with_output_root("/custom") do
+        expect(described_class.output_dir("Pg4eV6k", "Test")).to eq("/custom/Pg4eV6k_test")
+      end
     end
   end
 end

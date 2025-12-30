@@ -100,6 +100,11 @@ module PageMigration
           http.open_timeout = OPEN_TIMEOUT
           http.read_timeout = Config::DEFAULT_TIMEOUT
 
+          # Use system CA certificates without CRL checking
+          # The "unable to get certificate CRL" error occurs when OpenSSL
+          # tries to verify the certificate revocation list but can't fetch it
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
           response = http.request(request)
           handle_response(response)
         end

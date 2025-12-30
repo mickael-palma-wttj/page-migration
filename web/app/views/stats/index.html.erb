@@ -1,0 +1,95 @@
+<% content_for(:title) { "Organization Stats - Page Migration" } %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Organization Stats</h1>
+    <%= link_to "Export CSV", stats_path(format: :csv, size: @size),
+        class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
+  </div>
+
+  <!-- Summary & Filters -->
+  <div class="flex items-center justify-between gap-6">
+    <!-- Summary -->
+    <div class="flex gap-4">
+      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-6 py-3 text-center min-w-[100px]">
+        <div class="text-3xl font-bold text-wttj-black"><%= @summary[:total] %></div>
+        <div class="text-sm text-wttj-gray-dark">Total</div>
+      </div>
+      <% %w[big medium small].each do |size| %>
+        <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-6 py-3 text-center min-w-[100px]">
+          <div class="text-3xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
+          <div class="text-sm text-wttj-gray-dark"><%= size.capitalize %></div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4">
+      <%= form_with url: stats_path, method: :get, class: "flex gap-3 items-center", data: { turbo_frame: "_top" } do |f| %>
+        <label class="text-sm font-medium text-wttj-gray-dark">Size:</label>
+        <%= f.select :size,
+            options_for_select([["All", ""], ["Big", "big"], ["Medium", "medium"], ["Small", "small"]], @size),
+            {},
+            class: "px-3 py-1.5 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none text-sm" %>
+        <%= f.submit "Filter",
+            class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-1.5 rounded-lg transition-colors cursor-pointer text-sm" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-wttj-beige border-b border-wttj-gray-light">
+          <tr>
+            <%= render "stats/sortable_header", column: "reference", label: "Reference", align: "left" %>
+            <%= render "stats/sortable_header", column: "name", label: "Name", align: "left" %>
+            <%= render "stats/sortable_header", column: "total_pages", label: "Total", align: "right" %>
+            <%= render "stats/sortable_header", column: "published_pages", label: "Published", align: "right" %>
+            <%= render "stats/sortable_header", column: "latest_published_at", label: "Last Published", align: "left" %>
+            <%= render "stats/sortable_header", column: "size_category", label: "Size", align: "center" %>
+            <th class="px-4 py-3 text-center text-sm font-semibold text-wttj-black">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-wttj-gray-light">
+          <% @stats.each do |stat| %>
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= organization_path(stat.reference) %>'">
+              <td class="px-4 py-3 font-mono text-sm text-wttj-black"><%= stat.reference %></td>
+              <td class="px-4 py-3 text-wttj-black max-w-xs truncate" title="<%= stat.name %>">
+                <%= stat.truncated_name %>
+              </td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= stat.total_pages %></td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= stat.published_pages %></td>
+              <td class="px-4 py-3 text-sm text-wttj-gray-dark">
+                <%= stat.formatted_published_date || content_tag(:span, "-", class: "text-wttj-gray-medium") %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-block px-2 py-1 text-xs font-medium rounded <%= stat.size_badge_classes %>">
+                  <%= stat.size_category %>
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
+                <%= link_to new_command_path(org_ref: stat.reference),
+                    class: "inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-wttj-yellow transition-colors",
+                    title: "Run command" do %>
+                  <svg class="w-5 h-5 text-wttj-gray-dark hover:text-wttj-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @stats.empty? %>
+      <div class="p-8 text-center text-wttj-gray-dark">
+        No organizations found
+      </div>
+    <% end %>
+
+    <%= render "shared/pagination" %>
+  </div>
+</div>

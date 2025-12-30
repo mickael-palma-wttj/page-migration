@@ -1,0 +1,28 @@
+<%# Renders empty state for command list
+    locals: org_ref (String or nil), current_tab (String or nil) %>
+<div class="p-8 text-center">
+  <p class="text-wttj-gray-dark mb-4">
+    <% if current_tab.present? %>
+      No <%= current_tab %> commands run yet.
+    <% elsif org_ref.present? %>
+      No commands run yet for this organization.
+    <% else %>
+      No commands executed yet
+    <% end %>
+  </p>
+  <div class="flex justify-center gap-2">
+    <% if current_tab.present? && CommandRun::COMMANDS.include?(current_tab) %>
+      <%= link_to "Run #{current_tab.capitalize}", new_command_path(org_ref: org_ref, command: current_tab),
+          class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+    <% elsif org_ref.present? %>
+      <%= link_to "Extract", new_command_path(org_ref: org_ref, command: "extract"),
+          class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+      <%= link_to "Export", new_command_path(org_ref: org_ref, command: "export"),
+          class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+      <%= link_to "Migrate", new_command_path(org_ref: org_ref, command: "migrate"),
+          class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+    <% else %>
+      <%= link_to "Run your first command", new_command_path, class: "text-wttj-yellow hover:underline" %>
+    <% end %>
+  </div>
+</div>

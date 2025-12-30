@@ -28,3 +28,20 @@ Thumbs.db
 
 # RSpec persistence file
 /spec/examples.txt
+
+# Rails web app
+/web/log/*
+!/web/log/.keep
+/web/tmp/*
+!/web/tmp/.keep
+/web/storage/*
+!/web/storage/.keep
+/web/db/*.sqlite3
+/web/db/*.sqlite3-*
+/web/public/assets
+/web/node_modules
+/web/.puma-dev
+
+# Playwright
+/web/playwright-report/
+/web/test-results/

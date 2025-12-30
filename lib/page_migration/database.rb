@@ -7,9 +7,7 @@ module PageMigration
   # Handles database connection with automatic cleanup
   class Database
     def self.connect
-      Dotenv.load(".env")
-
-      database_url = ENV["DATABASE_URL"] || raise(PageMigration::Error, "DATABASE_URL not set in .env file")
+      database_url = resolve_database_url
       PG.connect(database_url)
     end
 
@@ -19,6 +17,19 @@ module PageMigration
       yield conn
     ensure
       conn&.close
+    end
+
+    # Resolve database URL from various sources
+    # Priority: PAGE_MIGRATION_DATABASE_URL constant (Rails context) > ENV > .env file
+    def self.resolve_database_url
+      # In Rails context, use the constant set by the initializer
+      if defined?(PAGE_MIGRATION_DATABASE_URL) && PAGE_MIGRATION_DATABASE_URL
+        return PAGE_MIGRATION_DATABASE_URL
+      end
+
+      # In CLI context, load from .env file
+      Dotenv.load(".env")
+      ENV["DATABASE_URL"] || raise(PageMigration::Error, "DATABASE_URL not set in .env file")
     end
   end
 end

@@ -1,0 +1,206 @@
+<% content_for(:title) { "Compare #{@org_ref} - Page Migration" } %>
+
+<% content_for :head do %>
+  <style>
+    .split-pane { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 1024px) { .split-pane { grid-template-columns: 1fr; } }
+    .highlight { background: #1e1e2e; color: #cdd6f4; }
+    .highlight .w { color: #cdd6f4 }
+    .highlight .p { color: #89b4fa }
+    .highlight .s, .highlight .s1, .highlight .s2 { color: #a6e3a1 }
+    .highlight .na, .highlight .nt, .highlight .nl { color: #f9e2af }
+    .highlight .mi, .highlight .mf, .highlight .mh, .highlight .mo, .highlight .l { color: #fab387 }
+    .highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt { color: #cba6f7 }
+    .highlight .c, .highlight .c1, .highlight .cm { color: #6c7086 }
+    .highlight .n { color: #cdd6f4 }
+    .highlight .nb { color: #89dceb }
+    .highlight .nc, .highlight .nn { color: #f9e2af }
+    .highlight .nd, .highlight .nf { color: #89b4fa }
+    .highlight .no { color: #fab387 }
+    .highlight .nv { color: #cdd6f4 }
+    .highlight .o { color: #89b4fa }
+    .highlight .ow { color: #cba6f7 }
+    .highlight .sb, .highlight .sc, .highlight .sh, .highlight .sx, .highlight .ss { color: #a6e3a1 }
+    .highlight .sd { color: #6c7086 }
+    .highlight .se, .highlight .si { color: #f2cdcd }
+    .highlight .sr { color: #f5c2e7 }
+    /* Prose styles for Markdown rendering */
+    .prose { color: #333; line-height: 1.6; }
+    .prose h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5rem 0 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+    .prose h2 { font-size: 1.5rem; font-weight: 600; margin: 1.25rem 0 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
+    .prose h3 { font-size: 1.25rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+    .prose h4 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
+    .prose p { margin: 0.75rem 0; }
+    .prose ul, .prose ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+    .prose ul { list-style-type: disc; }
+    .prose ol { list-style-type: decimal; }
+    .prose li { margin: 0.25rem 0; }
+    .prose a { color: #FFCD00; text-decoration: underline; }
+    .prose a:hover { color: #000; }
+    .prose code { background: #f5f5f5; padding: 0.15rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
+    .prose pre { background: #1e1e2e; color: #cdd6f4; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; }
+    .prose pre code { background: none; padding: 0; }
+    .prose blockquote { border-left: 4px solid #FFCD00; padding-left: 1rem; margin: 1rem 0; color: #666; font-style: italic; }
+    .prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .prose th, .prose td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+    .prose th { background: #f5f5f5; font-weight: 600; }
+    .prose hr { border: none; border-top: 1px solid #ddd; margin: 1.5rem 0; }
+    .prose img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+  </style>
+<% end %>
+
+<div class="space-y-6">
+  <nav class="text-sm text-wttj-gray-dark">
+    <%= link_to "Compare", comparisons_path, class: "hover:text-wttj-black" %> /
+    <span class="text-wttj-black"><%= @org_ref %></span>
+  </nav>
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Compare: <%= @org_ref %></h1>
+  </div>
+
+  <!-- Split Pane Comparison -->
+  <div class="split-pane">
+    <!-- Source Data (Left) -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light overflow-hidden" data-controller="page-filter accordion">
+      <div class="bg-wttj-gray-darker p-3 border-b border-wttj-gray-light">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h2 class="font-semibold text-white">Source Data</h2>
+            <p class="text-xs text-wttj-gray-light">contenu_<%= @language %>.json</p>
+          </div>
+          <% if @source_data && @source_data["pages"]&.any? %>
+            <span class="text-xs text-wttj-gray-light" data-page-filter-target="count"><%= @source_data["pages"].count %> / <%= @source_data["pages"].count %></span>
+          <% end %>
+        </div>
+        <% if @source_data && @source_data["pages"]&.any? %>
+          <div class="flex bg-white border-2 border-wttj-gray-dark rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-wttj-yellow focus-within:border-wttj-yellow">
+            <input type="text"
+                   placeholder="Filter pages by slug or content..."
+                   data-page-filter-target="input"
+                   data-action="input->page-filter#filter"
+                   class="flex-1 px-3 py-2 text-sm text-wttj-black placeholder-wttj-gray-medium border-0 focus:outline-none focus:ring-0">
+            <button type="button"
+                    data-action="click->page-filter#clear"
+                    class="px-3 border-l-2 border-wttj-gray-dark text-wttj-gray-dark hover:text-wttj-black hover:bg-wttj-gray-light transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        <% end %>
+      </div>
+      <div class="max-h-[600px] overflow-y-auto divide-y divide-wttj-gray-light">
+        <% if @source_data && @source_data["pages"]&.any? %>
+          <% @source_data["pages"].each do |page| %>
+            <%# Flatten all content to a single searchable string %>
+            <% searchable_content = page["content"]&.map { |c| c.is_a?(Hash) ? c.values.join(" ") : c.to_s }&.join(" ") rescue "" %>
+            <div data-page-filter-target="page"
+                 data-slug="<%= page["slug"] %>"
+                 data-content="<%= searchable_content.downcase %>">
+              <button type="button"
+                      data-action="click->accordion#toggle"
+                      class="w-full px-4 py-3 flex items-center justify-between hover:bg-wttj-beige transition-colors text-left">
+                <div class="flex items-center gap-3">
+                  <svg data-accordion-target="icon" class="w-4 h-4 text-wttj-gray-medium transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  <span class="font-mono text-sm text-wttj-black"><%= page["slug"] %></span>
+                </div>
+                <% if page["content"].is_a?(Array) %>
+                  <span class="text-xs text-wttj-gray-medium"><%= page["content"].count %> items</span>
+                <% end %>
+              </button>
+              <div class="hidden px-4 pb-4">
+                <div class="bg-wttj-black rounded-lg p-4 max-h-80 overflow-y-auto">
+                  <pre class="highlight font-mono text-sm leading-relaxed whitespace-pre-wrap break-words"><code><%= raw highlight_file_content(JSON.pretty_generate(page), :json) %></code></pre>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        <% elsif @source_data %>
+          <div class="p-4">
+            <p class="text-wttj-gray-dark text-sm">No pages in source data</p>
+          </div>
+        <% else %>
+          <div class="p-4">
+            <p class="text-wttj-gray-dark">Source data not available</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Generated Output (Right) -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light overflow-hidden">
+      <% if @all_output_files.any? %>
+        <% folders = extract_folders_from_files(@all_output_files) %>
+        <div data-controller="file-browser accordion" data-file-browser-root-label-value="migration" data-file-browser-dark-mode-value="true">
+          <div class="bg-wttj-gray-darker p-3 border-b border-wttj-gray-light">
+            <h2 class="font-semibold text-white">Generated Output (<%= @all_output_files.count %> files)</h2>
+            <nav class="text-sm font-mono mt-1" data-file-browser-target="breadcrumb">
+              <button type="button" data-action="click->file-browser#navigate" data-path="" class="text-white font-medium hover:text-wttj-yellow">migration</button>
+            </nav>
+          </div>
+          <div class="max-h-[600px] overflow-y-auto divide-y divide-wttj-gray-light">
+            <%# Folders %>
+            <% folders.each do |folder| %>
+              <div data-file-browser-target="folderItem"
+                   data-folder-path="<%= folder %>"
+                   data-folder-parent="<%= folder_parent(folder) %>"
+                   class="<%= folder_parent(folder).present? ? 'hidden' : '' %>">
+                <button type="button"
+                        data-action="click->file-browser#navigate"
+                        data-path="<%= folder %>"
+                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-wttj-beige transition-colors text-left">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-wttj-yellow" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
+                    </svg>
+                    <span class="font-mono text-sm text-wttj-black"><%= folder.split("/").last %></span>
+                  </div>
+                  <svg class="w-4 h-4 text-wttj-gray-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
+            <% end %>
+            <%# Files %>
+            <% @all_output_files.each do |file| %>
+              <div data-file-browser-target="fileItem"
+                   data-file-path="<%= file[:path] %>"
+                   data-file-dir="<%= file_directory(file[:path]) %>"
+                   class="<%= file_directory(file[:path]).present? ? 'hidden' : '' %>">
+                <button type="button"
+                        data-action="click->accordion#toggle"
+                        class="w-full px-4 py-3 flex items-center justify-between hover:bg-wttj-beige transition-colors text-left">
+                  <div class="flex items-center gap-3">
+                    <svg data-accordion-target="icon" class="w-4 h-4 text-wttj-gray-medium transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                    <span class="font-mono text-sm text-wttj-black"><%= file[:name] %></span>
+                    <span class="text-xs text-wttj-gray-medium uppercase px-2 py-0.5 bg-wttj-beige rounded">json</span>
+                  </div>
+                  <span class="text-xs text-wttj-gray-medium"><%= number_to_human_size(file[:size]) %></span>
+                </button>
+                <div class="hidden px-4 pb-4">
+                  <div class="bg-wttj-black rounded-lg p-4 max-h-80 overflow-y-auto">
+                    <pre class="highlight font-mono text-sm leading-relaxed whitespace-pre-wrap break-words"><code><%= raw highlight_file_content(File.read(file[:full_path]), :json) %></code></pre>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="bg-wttj-gray-darker p-3 border-b border-wttj-gray-light">
+          <h2 class="font-semibold text-white">Generated Output</h2>
+          <p class="text-xs text-wttj-gray-light">migration/*.json</p>
+        </div>
+        <div class="p-4">
+          <p class="text-wttj-gray-medium">No migration output available</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

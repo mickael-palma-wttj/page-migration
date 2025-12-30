@@ -3,6 +3,8 @@ inherit_gem:
 
 AllCops:
   TargetRubyVersion: 3.4
+  Exclude:
+    - "web/**/*"
 
 # Spec files often have long blocks for describe/context
 Metrics/BlockLength:

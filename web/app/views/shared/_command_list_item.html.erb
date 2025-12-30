@@ -1,0 +1,22 @@
+<%# Renders a command run list item row
+    locals: presenter (CommandRunPresenter), show_org_ref (boolean, default: true) %>
+<% show_org_ref = local_assigns.fetch(:show_org_ref, true) %>
+<div class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+  <%= link_to command_path(presenter), class: "flex-1 flex items-center justify-between" do %>
+    <div class="flex items-center gap-4">
+      <%= render "shared/status_indicator", presenter: presenter %>
+      <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded"><%= presenter.command %></span>
+      <% if show_org_ref %>
+        <span class="text-wttj-gray-dark"><%= presenter.org_ref || "—" %></span>
+      <% end %>
+      <%= render "shared/options_tags", presenter: presenter %>
+    </div>
+    <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
+      <% if presenter.formatted_duration %>
+        <span><%= presenter.formatted_duration %></span>
+      <% end %>
+      <span><%= presenter.formatted_date %></span>
+    </div>
+  <% end %>
+  <%= render "shared/delete_button", presenter: presenter %>
+</div>

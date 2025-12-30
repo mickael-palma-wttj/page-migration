@@ -11,6 +11,7 @@ RSpec.describe PageMigration::Commands::Migrate do
   end
 
   before do
+    allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch).with("DUST_WORKSPACE_ID").and_return("workspace_123")
     allow(ENV).to receive(:fetch).with("DUST_API_KEY").and_return("api_key_123")
     allow(ENV).to receive(:fetch).with("DUST_AGENT_ID").and_return("agent_123")

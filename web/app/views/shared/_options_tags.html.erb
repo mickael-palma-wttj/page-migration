@@ -1,0 +1,12 @@
+<%# Renders option tags for a command run
+    locals: presenter (CommandRunPresenter) %>
+<% if presenter.formatted_options.any? %>
+  <div class="flex flex-wrap gap-1">
+    <% presenter.formatted_options.each do |opt| %>
+      <span class="text-xs bg-wttj-beige px-2 py-0.5 rounded">
+        <span class="text-wttj-gray-dark">--<%= opt[:key] %>:</span>
+        <span class="font-mono"><%= opt[:value] %></span>
+      </span>
+    <% end %>
+  </div>
+<% end %>

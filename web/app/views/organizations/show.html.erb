@@ -1,0 +1,56 @@
+<% content_for(:title) { "#{@organization&.name || @org_ref} - Page Migration" } %>
+
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-wttj-gray-dark">
+    <%= link_to "Search", organizations_path, class: "hover:text-wttj-black" %> /
+    <span class="text-wttj-black"><%= @org_ref %></span>
+  </nav>
+
+  <% if @organization %>
+    <!-- Organization Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-wttj-black"><%= @organization.name %></h1>
+          <div class="flex items-center gap-4 mt-2">
+            <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
+              <%= @organization.reference %>
+            </span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to "Extract", new_command_path(org_ref: @org_ref, command: "extract"),
+              class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+          <%= link_to "Export", new_command_path(org_ref: @org_ref, command: "export"),
+              class: "bg-wttj-beige hover:bg-wttj-gray-light text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+          <%= link_to "Migrate", new_command_path(org_ref: @org_ref, command: "migrate"),
+              class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-medium px-4 py-2 rounded-lg transition-colors" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Command History -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+      <div class="p-4 border-b border-wttj-gray-light">
+        <h2 class="text-xl font-semibold text-wttj-black mb-4">Command History</h2>
+        <%= render "shared/command_tabs", current_tab: @current_tab, base_path: ->(opts = {}) { organization_path(@org_ref, opts) } %>
+      </div>
+
+      <% if @command_runs.any? %>
+        <div class="divide-y divide-wttj-gray-light">
+          <% @command_runs.each do |cmd| %>
+            <%= render "shared/command_list_item", presenter: CommandRunPresenter.new(cmd), show_org_ref: false %>
+          <% end %>
+        </div>
+      <% else %>
+        <%= render "shared/empty_commands", org_ref: @org_ref, current_tab: @current_tab %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-8 text-center">
+      <p class="text-wttj-gray-dark">Organization not found: <%= @org_ref %></p>
+      <%= link_to "Back to Search", organizations_path, class: "text-wttj-yellow hover:underline mt-2 inline-block" %>
+    </div>
+  <% end %>
+</div>

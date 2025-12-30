@@ -1,0 +1,31 @@
+<% if @pagy && @pagy.pages > 1 %>
+  <nav class="flex items-center justify-center gap-2 py-4 border-t border-wttj-gray-light">
+    <% if @pagy.prev %>
+      <%= link_to pagy_url_for(@pagy, @pagy.prev), class: "px-3 py-1.5 text-sm font-medium text-wttj-gray-dark hover:text-wttj-black hover:bg-wttj-beige rounded transition-colors" do %>
+        ← Previous
+      <% end %>
+    <% else %>
+      <span class="px-3 py-1.5 text-sm font-medium text-wttj-gray-medium">← Previous</span>
+    <% end %>
+
+    <div class="flex items-center gap-1">
+      <% @pagy.series.each do |item| %>
+        <% if item == :gap %>
+          <span class="px-2 py-1 text-sm text-wttj-gray-medium">…</span>
+        <% elsif item == @pagy.page %>
+          <span class="px-3 py-1.5 text-sm font-medium bg-wttj-yellow text-wttj-black rounded"><%= item %></span>
+        <% else %>
+          <%= link_to item, pagy_url_for(@pagy, item), class: "px-3 py-1.5 text-sm font-medium text-wttj-gray-dark hover:text-wttj-black hover:bg-wttj-beige rounded transition-colors" %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @pagy.next %>
+      <%= link_to pagy_url_for(@pagy, @pagy.next), class: "px-3 py-1.5 text-sm font-medium text-wttj-gray-dark hover:text-wttj-black hover:bg-wttj-beige rounded transition-colors" do %>
+        Next →
+      <% end %>
+    <% else %>
+      <span class="px-3 py-1.5 text-sm font-medium text-wttj-gray-medium">Next →</span>
+    <% end %>
+  </nav>
+<% end %>

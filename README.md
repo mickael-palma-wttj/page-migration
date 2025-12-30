@@ -27,14 +27,15 @@ DUST_AGENT_ID=your_agent_id
 
 ### Commands
 
-| Command   | Description                                              |
-|-----------|----------------------------------------------------------|
-| `extract` | Extract organization data from database (JSON or text)  |
-| `tree`    | Extract page tree hierarchy to JSON                     |
-| `export`  | Export complete content as Markdown                     |
-| `convert` | Convert JSON data to Markdown files                     |
-| `run`     | Run both extract and convert in sequence                |
-| `migrate` | Generate assets using Dust AI based on prompts          |
+| Command    | Description                                              |
+|------------|----------------------------------------------------------|
+| `extract`  | Extract organization data from database (JSON or text)   |
+| `tree`     | Extract page tree hierarchy to JSON                      |
+| `export`   | Export complete content as Markdown                      |
+| `migrate`  | Generate assets using Dust AI based on prompts           |
+| `analysis` | Run AI-powered page migration fit analysis               |
+| `health`   | Check environment configuration and connectivity         |
+| `app`      | Start the web interface                                  |
 
 ### Examples
 
@@ -57,11 +58,68 @@ DUST_AGENT_ID=your_agent_id
 # Export only custom pages
 ./bin/page_migration export Pg4eV6k --custom-only
 
+# Export as directory tree
+./bin/page_migration export Pg4eV6k --tree
+
 # Generate AI assets using Dust
 ./bin/page_migration migrate Pg4eV6k
 
 # Generate AI assets in English
 ./bin/page_migration migrate Pg4eV6k -l en
+
+# Use a specific AI model
+./bin/page_migration migrate Pg4eV6k --agent-id gpt5
+
+# Run page migration fit analysis
+./bin/page_migration migrate Pg4eV6k --analysis
+
+# Preview migration without changes
+./bin/page_migration migrate Pg4eV6k --dry-run
+
+# Check environment setup
+./bin/page_migration health
+
+# Start web UI
+./bin/page_migration app
+
+# Start web UI on custom port
+./bin/page_migration app -p 4000
+```
+
+## Web Application
+
+The web application provides a user-friendly interface for running commands and viewing results.
+
+```bash
+# Start the web app
+./bin/page_migration app
+
+# Or directly with Rails
+cd web && bin/rails server
+```
+
+Features:
+- Organization search and selection
+- Run extract, export, migrate, analysis, tree, and health commands
+- View command history and results
+- Compare migration outputs
+- Real-time streaming output
+
+### E2E Testing
+
+The web app includes Playwright-based end-to-end tests:
+
+```bash
+cd web
+
+# Run all e2e tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests in headed mode
+npm run test:headed
 ```
 
 ## Project Structure
@@ -80,6 +138,14 @@ lib/
     renderers/               # Shared rendering modules
     services/                # Business logic services
     support/                 # Utility classes and helpers
+
+web/                         # Rails web application
+  app/
+    controllers/             # Application controllers
+    models/                  # Data models
+    views/                   # ERB templates
+    presenters/              # View presenters
+  e2e/                       # Playwright tests
 ```
 
 ### Module Overview
@@ -105,6 +171,24 @@ See README files in each subdirectory for detailed documentation.
 | Text   | `tmp/query_result/{org_ref}_{name}/contenu_{lang}.txt` |
 | Markdown | `tmp/export/{org_ref}_{name}_{lang}.md` |
 | AI Assets | `tmp/generated_assets/{org_ref}_{name}/` |
+
+## Development
+
+### VS Code Tasks
+
+Essential tasks are available via `Cmd+Shift+P` → "Tasks: Run Task":
+
+**CLI:**
+- CLI: Run App - Start the web interface
+- CLI: Help - Show CLI help
+- CLI: Run Tests - Run RSpec tests
+- CLI: Run Linter / Fix Linting - StandardRB
+
+**Web:**
+- Web: Start Server - Rails development server
+- Web: Run E2E Tests - Playwright tests
+- Web: DB Migrate / Prepare - Database management
+- Web: Rails Console - Interactive console
 
 ## License
 

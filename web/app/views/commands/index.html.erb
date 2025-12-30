@@ -1,0 +1,23 @@
+<% content_for(:title) { "Commands - Page Migration" } %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Command History</h1>
+    <%= link_to "Run Command", new_command_path, class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
+  </div>
+
+  <%= render "shared/command_tabs", current_tab: @current_tab, base_path: ->(opts = {}) { commands_path(opts) } %>
+
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+    <% if @command_runs.any? %>
+      <div class="divide-y divide-wttj-gray-light">
+        <% @command_runs.each do |cmd| %>
+          <%= render "shared/command_list_item", presenter: CommandRunPresenter.new(cmd), show_org_ref: true %>
+        <% end %>
+      </div>
+      <%= render "shared/pagination" %>
+    <% else %>
+      <%= render "shared/empty_commands", org_ref: nil, current_tab: @current_tab %>
+    <% end %>
+  </div>
+</div>

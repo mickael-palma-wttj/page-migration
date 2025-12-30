@@ -1,0 +1,113 @@
+<% content_for(:title) { "Dashboard - Page Migration" } %>
+
+<div class="space-y-8">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Dashboard</h1>
+    <%= link_to "Run Command", new_command_path, class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+    <h2 class="text-xl font-semibold text-wttj-black mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <%= link_to new_command_path(command: "extract"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📥</span>
+        <span class="font-medium text-wttj-black">Extract</span>
+        <span class="text-xs text-wttj-gray-dark">Get org data</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "export"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📄</span>
+        <span class="font-medium text-wttj-black">Export</span>
+        <span class="text-xs text-wttj-gray-dark">Generate Markdown</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "migrate"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">🤖</span>
+        <span class="font-medium text-wttj-black">Migrate</span>
+        <span class="text-xs text-wttj-gray-dark">Run AI prompts</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "analysis"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">📊</span>
+        <span class="font-medium text-wttj-black">Analysis</span>
+        <span class="text-xs text-wttj-gray-dark">Analyze pages</span>
+      <% end %>
+
+      <%= link_to new_command_path(command: "health"), class: "flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow hover:bg-wttj-beige transition-colors" do %>
+        <span class="text-2xl mb-2">🔧</span>
+        <span class="font-medium text-wttj-black">Health</span>
+        <span class="text-xs text-wttj-gray-dark">Check setup</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Recent Commands -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-wttj-black">Recent Commands</h2>
+        <%= link_to "View All", commands_path, class: "text-wttj-gray-dark hover:text-wttj-black text-sm" %>
+      </div>
+
+      <% if @recent_commands.any? %>
+        <div class="space-y-3">
+          <% @recent_commands.each do |cmd| %>
+            <%= link_to command_path(cmd), class: "block p-3 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" do %>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded"><%= cmd.command %></span>
+                  <span class="text-wttj-gray-dark text-sm"><%= cmd.org_ref %></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <% case cmd.display_status %>
+                  <% when "completed" %>
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <% when "failed" %>
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                  <% when "running" %>
+                    <span class="w-2 h-2 bg-wttj-yellow rounded-full animate-pulse"></span>
+                  <% when "interrupted" %>
+                    <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                  <% else %>
+                    <span class="w-2 h-2 bg-wttj-gray-medium rounded-full"></span>
+                  <% end %>
+                  <span class="text-xs text-wttj-gray-medium"><%= time_ago_in_words(cmd.created_at) %> ago</span>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-wttj-gray-dark text-center py-8">No commands executed yet</p>
+      <% end %>
+    </div>
+
+    <!-- Recent Exports -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-wttj-black">Recent Exports</h2>
+        <%= link_to "View All", exports_path, class: "text-wttj-gray-dark hover:text-wttj-black text-sm" %>
+      </div>
+
+      <% if @exports.any? %>
+        <div class="space-y-3">
+          <% @exports.each do |export| %>
+            <%= link_to export_path(export[:id]), class: "block p-3 rounded-lg border border-wttj-gray-light hover:border-wttj-yellow transition-colors" do %>
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-mono text-sm"><%= export[:org_ref] %></span>
+                  <span class="text-wttj-gray-dark text-sm ml-2"><%= export[:name].split("_", 2).last %></span>
+                </div>
+                <span class="text-xs text-wttj-gray-medium"><%= time_ago_in_words(export[:modified_at]) %> ago</span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-wttj-gray-dark text-center py-8">No exports found</p>
+      <% end %>
+    </div>
+  </div>
+</div>

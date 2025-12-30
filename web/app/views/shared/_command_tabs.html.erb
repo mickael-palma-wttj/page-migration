@@ -1,0 +1,10 @@
+<%# Renders command filter tabs
+    locals: current_tab (String or nil), base_path (Proc that takes optional tab param) %>
+<div class="flex gap-2 border-b border-wttj-gray-light">
+  <%= link_to "All", base_path.call,
+      class: "px-4 py-2 font-medium transition-colors #{current_tab.blank? ? 'text-wttj-black border-b-2 border-wttj-yellow' : 'text-wttj-gray-dark hover:text-wttj-black'}" %>
+  <% CommandRun::COMMANDS.each do |cmd| %>
+    <%= link_to cmd.capitalize, base_path.call(tab: cmd),
+        class: "px-4 py-2 font-medium transition-colors #{current_tab == cmd ? 'text-wttj-black border-b-2 border-wttj-yellow' : 'text-wttj-gray-dark hover:text-wttj-black'}" %>
+  <% end %>
+</div>

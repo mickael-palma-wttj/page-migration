@@ -12,13 +12,14 @@ module PageMigration
       PROMPTS_DIR = File.expand_path("../prompts/migration", __dir__)
       ANALYSIS_PROMPT = File.expand_path("../prompts/analysis.prompt.md", __dir__)
 
-      def initialize(org_ref, language: "fr", debug: false, analysis: false, dry_run: false, cache: true)
+      def initialize(org_ref, language: "fr", debug: false, analysis: false, dry_run: false, cache: true, agent_id: nil)
         @org_ref = org_ref
         @language = language
         @debug = debug
         @analysis_only = analysis
         @dry_run = dry_run
         @cache_enabled = cache
+        @agent_id = agent_id || ENV.fetch("DUST_AGENT_ID")
 
         return if @dry_run
 
@@ -28,7 +29,7 @@ module PageMigration
           debug: @debug
         )
 
-        dust_runner = PageMigration::Dust::Runner.new(@client, ENV.fetch("DUST_AGENT_ID"), debug: @debug)
+        dust_runner = PageMigration::Dust::Runner.new(@client, @agent_id, debug: @debug)
         @processor = PageMigration::Services::PromptProcessor.new(@client, {}, dust_runner, language: @language, debug: @debug)
         @prompt_runner = PageMigration::Services::PromptRunner.new(@processor, debug: @debug)
       end

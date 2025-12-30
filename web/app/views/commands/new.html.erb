@@ -1,0 +1,123 @@
+<% content_for(:title) { "Run Command - Page Migration" } %>
+
+<%
+  commands_config = {
+    "extract" => { icon: "📥", label: "Extract", description: "Get org data" },
+    "export" => { icon: "📄", label: "Export", description: "Generate Markdown" },
+    "migrate" => { icon: "🤖", label: "Migrate", description: "Run AI prompts" },
+    "analysis" => { icon: "📊", label: "Analysis", description: "Analyze pages" },
+    "tree" => { icon: "🌳", label: "Tree", description: "Page hierarchy" },
+    "health" => { icon: "🔧", label: "Health", description: "Check setup" }
+  }
+%>
+
+<div class="space-y-6">
+  <nav class="text-sm text-wttj-gray-dark">
+    <%= link_to "Commands", commands_path, class: "hover:text-wttj-black" %> /
+    <span class="text-wttj-black">New</span>
+  </nav>
+
+  <h1 class="text-3xl font-bold text-wttj-black">Run Command</h1>
+
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+    <%= form_with url: commands_path, method: :post, class: "space-y-6", data: { controller: "command-form" } do |f| %>
+      <!-- Command Selection -->
+      <div>
+        <label class="block text-sm font-medium text-wttj-black mb-3">Command</label>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <% CommandRun::COMMANDS.each do |cmd| %>
+            <% config = commands_config[cmd] || { icon: "📋", label: cmd.capitalize, description: "" } %>
+            <label class="cursor-pointer">
+              <input type="radio" name="command" value="<%= cmd %>"
+                     <%= "checked" if @command == cmd %>
+                     data-action="change->command-form#validate"
+                     class="peer sr-only">
+              <div class="flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light peer-checked:border-wttj-yellow peer-checked:bg-wttj-beige hover:border-wttj-yellow hover:bg-wttj-beige transition-colors">
+                <span class="text-2xl mb-2"><%= config[:icon] %></span>
+                <span class="font-medium text-wttj-black"><%= config[:label] %></span>
+                <span class="text-xs text-wttj-gray-dark"><%= config[:description] %></span>
+              </div>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Organization Reference -->
+      <div>
+        <label for="org_search" class="block text-sm font-medium text-wttj-black mb-2">
+          Organization
+          <span class="text-wttj-gray-medium font-normal">(required except for health)</span>
+        </label>
+        <div class="relative" data-controller="autocomplete" data-autocomplete-url-value="<%= search_organizations_path %>">
+          <input type="hidden" name="org_ref" data-autocomplete-target="hidden" data-command-form-target="orgRef" data-action="change->command-form#validate" value="<%= @org_ref %>">
+          <div class="flex gap-2">
+            <div class="flex-1 relative">
+              <input type="text" id="org_search"
+                     data-autocomplete-target="input"
+                     data-action="input->autocomplete#search keydown->autocomplete#keydown blur->autocomplete#blur focus->autocomplete#focus change->command-form#validate"
+                     value="<%= @org_ref %>"
+                     placeholder="Search by name or reference..."
+                     autocomplete="off"
+                     class="w-full px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none transition-colors">
+              <div data-autocomplete-target="results"
+                   class="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-wttj-gray-light rounded-lg shadow-lg max-h-64 overflow-y-auto hidden">
+              </div>
+            </div>
+            <button type="button"
+                    data-action="click->autocomplete#clear click->command-form#validate"
+                    class="text-wttj-gray-dark hover:text-wttj-black px-3 py-2 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors">
+              Clear
+            </button>
+          </div>
+          <div data-autocomplete-target="display" class="mt-2 text-sm text-wttj-gray-dark hidden"></div>
+          <div data-command-form-target="orgError" class="mt-2 text-sm text-red-600 hidden">
+            Organization is required for this command
+          </div>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label for="format_option" class="block text-sm font-medium text-wttj-black mb-2">Format</label>
+          <select name="format_option" id="format_option"
+                  class="w-full px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none transition-colors">
+            <option value="json">JSON (full structure)</option>
+            <option value="simple-json">Simple JSON (flat content)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="language" class="block text-sm font-medium text-wttj-black mb-2">Language</label>
+          <select name="language" id="language"
+                  class="w-full px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none transition-colors">
+            <option value="fr">French (fr)</option>
+            <option value="en">English (en)</option>
+            <option value="de">German (de)</option>
+            <option value="es">Spanish (es)</option>
+            <option value="cs">Czech (cs)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="agent_id" class="block text-sm font-medium text-wttj-black mb-2">
+            AI Model
+            <span class="text-wttj-gray-medium font-normal">(migrate/analysis)</span>
+          </label>
+          <select name="agent_id" id="agent_id"
+                  class="w-full px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none transition-colors">
+            <option value="claude-4.5-sonnet" selected>Claude 4.5 Sonnet (default)</option>
+            <option value="gemini-pro">Gemini Pro</option>
+            <option value="gpt5">GPT-5</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex justify-end gap-4 pt-4 border-t border-wttj-gray-light">
+        <%= link_to "Cancel", commands_path, class: "px-4 py-2 text-wttj-gray-dark hover:text-wttj-black transition-colors" %>
+        <%= f.submit "Run Command", data: { command_form_target: "submit" }, class: "bg-wttj-yellow text-wttj-black font-semibold px-6 py-2 rounded-lg transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</div>
