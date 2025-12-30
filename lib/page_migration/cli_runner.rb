@@ -14,7 +14,7 @@ module PageMigration
     end
 
     def call
-      return show_help if @args.empty? || @args.first == "-h" || @args.first == "--help"
+      return show_help if @args.empty? || help_requested?
 
       command = @args.shift
       return show_help("Unknown command: #{command}") unless COMMANDS.include?(command)
@@ -198,6 +198,10 @@ module PageMigration
       Validator.validate_org_ref!(org_ref)
     rescue Errors::ValidationError => e
       abort "Error: #{e.message}\n\n#{parser}"
+    end
+
+    def help_requested?
+      %w[-h --help].include?(@args.first)
     end
   end
 end
