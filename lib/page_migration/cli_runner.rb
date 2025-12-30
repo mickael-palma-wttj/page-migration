@@ -51,14 +51,9 @@ module PageMigration
     end
 
     def run_tree
-      parser = build_tree_parser
-      parser.parse!(@args)
-
-      org_ref = validate_org_ref(@args.shift, parser)
-
-      Commands::ExtractTree.new(org_ref, **@options).call
-    rescue Errors::ValidationError => e
-      abort "Error: #{e.message}"
+      run_with_org_ref(build_tree_parser) do |org_ref|
+        Commands::ExtractTree.new(org_ref, **@options).call
+      end
     end
 
     def build_tree_parser
