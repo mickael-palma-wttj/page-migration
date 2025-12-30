@@ -2,6 +2,18 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "CLI: Run App",
+      "type": "shell",
+      "command": "./bin/page_migration app",
+      "problemMatcher": []
+    },
+    {
+      "label": "CLI: Help",
+      "type": "shell",
+      "command": "./bin/page_migration",
+      "problemMatcher": []
+    },
+    {
       "label": "CLI: Run Tests",
       "type": "shell",
       "command": "bundle exec rspec",
