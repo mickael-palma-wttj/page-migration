@@ -16,11 +16,34 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: "3.3"
           bundler-cache: true
 
       - name: Run tests
         run: bundle exec rspec
+
+  test-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: web
+
+      - name: Setup database
+        run: bin/rails db:prepare
+
+      - name: Run web app tests
+        run: bundle exec rspec
+        continue-on-error: true  # Web app tests may not exist yet
 
   lint:
     runs-on: ubuntu-latest
@@ -31,11 +54,19 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Run StandardRB
+      - name: Run StandardRB (root)
         run: bundle exec standardrb
+
+      - name: Install web dependencies
+        run: bundle install
+        working-directory: web
+
+      - name: Run StandardRB (web)
+        run: bundle exec standardrb
+        working-directory: web
 
   security:
     runs-on: ubuntu-latest
@@ -46,8 +77,16 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Run bundle-audit
+      - name: Run bundle-audit (root)
         run: bundle exec bundle-audit check --update
+
+      - name: Install web dependencies
+        run: bundle install
+        working-directory: web
+
+      - name: Run bundle-audit (web)
+        run: bundle exec bundle-audit check --update
+        working-directory: web

@@ -1,10 +1,11 @@
 {
   "name": "Page Migration",
-  "image": "mcr.microsoft.com/devcontainers/ruby:3.4",
+  "image": "mcr.microsoft.com/devcontainers/ruby:3.3",
   "runArgs": ["--network=host"],
   "containerEnv": {
     "DATABASE_URL": "postgres://postgres:postgres@host.docker.internal:5432/wk_dev"
   },
+  "forwardPorts": [3000],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -15,6 +16,6 @@
       }
     }
   },
-  "postCreateCommand": "bundle install",
+  "postCreateCommand": ".devcontainer/post-create.sh",
   "remoteUser": "vscode"
 }
