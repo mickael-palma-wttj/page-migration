@@ -4,13 +4,13 @@
     {
       "label": "CLI: Run App",
       "type": "shell",
-      "command": "./bin/page_migration app",
+      "command": "bundle exec ./bin/page_migration app",
       "problemMatcher": []
     },
     {
       "label": "CLI: Help",
       "type": "shell",
-      "command": "./bin/page_migration",
+      "command": "bundle exec ./bin/page_migration",
       "problemMatcher": []
     },
     {
