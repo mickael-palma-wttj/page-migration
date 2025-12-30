@@ -5,7 +5,7 @@ require "optparse"
 module PageMigration
   # CLI parser and dispatcher
   class CliRunner
-    COMMANDS = %w[extract tree export migrate health app].freeze
+    COMMANDS = %w[extract tree export migrate health app stats].freeze
     HELP_TEXT = <<~HELP
       Page Migration CLI
 
@@ -18,6 +18,7 @@ module PageMigration
         migrate       Generate assets using Dust AI (supports --agent-id for model selection)
         health        Check environment configuration and connectivity
         app           Start the web interface
+        stats         Show organization statistics with page counts
 
       Options:
         -h, --help    Show help for a command
@@ -41,6 +42,9 @@ module PageMigration
         page_migration health                              # Verify environment setup
         page_migration app                                 # Start web UI on port 3000
         page_migration app -p 4000                         # Start web UI on custom port
+        page_migration stats                               # Show organization page counts
+        page_migration stats -s big                        # Show only big organizations
+        page_migration stats -o orgs.csv                   # Export to CSV
     HELP
 
     def initialize(args)
@@ -187,6 +191,24 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration app [options]"
         opts.on("-p", "--port PORT", Integer, "Port number (default: 3000)") { |p| @options[:port] = p }
+        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+      end
+    end
+
+    def run_stats
+      parser = build_stats_parser
+      parser.parse!(@args)
+
+      Commands::Stats.new(**@options).call
+    end
+
+    def build_stats_parser
+      OptionParser.new do |opts|
+        opts.banner = "Usage: page_migration stats [options]"
+        opts.on("-n", "--limit N", Integer, "Limit results (default: 50)") { |n| @options[:limit] = n }
+        opts.on("-s", "--size SIZE", "Filter by size: small, medium, big") { |s| @options[:size] = s }
+        opts.on("-o", "--output FILE", "Export to CSV file") { |f| @options[:output] = f }
+        opts.on("-d", "--debug", "Enable debug mode") { @options[:debug] = true }
         opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
       end
     end
