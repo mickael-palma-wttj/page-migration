@@ -25,16 +25,11 @@ module PageMigration
     private
 
     def run_extract
-      parser = build_extract_parser
-      parser.parse!(@args)
-
-      org_ref = validate_org_ref(@args.shift, parser)
-      @options[:format] = Validator.validate_format!(@options[:format])
-      @options[:language] = Validator.validate_language!(@options[:language])
-
-      Commands::Extract.new(org_ref, **@options).call
-    rescue Errors::ValidationError => e
-      abort "Error: #{e.message}"
+      run_with_org_ref(build_extract_parser) do |org_ref|
+        @options[:format] = Validator.validate_format!(@options[:format])
+        @options[:language] = Validator.validate_language!(@options[:language])
+        Commands::Extract.new(org_ref, **@options).call
+      end
     end
 
     def build_extract_parser
