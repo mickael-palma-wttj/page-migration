@@ -7,8 +7,22 @@
         class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
   </div>
 
-  <!-- Filters & Summary -->
+  <!-- Summary & Filters -->
   <div class="flex items-center justify-between gap-6">
+    <!-- Summary -->
+    <div class="flex gap-4">
+      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-6 py-3 text-center min-w-[100px]">
+        <div class="text-3xl font-bold text-wttj-black"><%= @summary[:total] %></div>
+        <div class="text-sm text-wttj-gray-dark">Total</div>
+      </div>
+      <% %w[big medium small].each do |size| %>
+        <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-6 py-3 text-center min-w-[100px]">
+          <div class="text-3xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
+          <div class="text-sm text-wttj-gray-dark"><%= size.capitalize %></div>
+        </div>
+      <% end %>
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4">
       <%= form_with url: stats_path, method: :get, class: "flex gap-3 items-center", data: { turbo_frame: "_top" } do |f| %>
@@ -19,20 +33,6 @@
             class: "px-3 py-1.5 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none text-sm" %>
         <%= f.submit "Filter",
             class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-1.5 rounded-lg transition-colors cursor-pointer text-sm" %>
-      <% end %>
-    </div>
-
-    <!-- Summary -->
-    <div class="flex gap-3">
-      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-4 py-2 text-center min-w-[80px]">
-        <div class="text-2xl font-bold text-wttj-black"><%= @summary[:total] %></div>
-        <div class="text-xs text-wttj-gray-dark">Total</div>
-      </div>
-      <% %w[big medium small].each do |size| %>
-        <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-4 py-2 text-center min-w-[80px]">
-          <div class="text-2xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
-          <div class="text-xs text-wttj-gray-dark"><%= size.capitalize %></div>
-        </div>
       <% end %>
     </div>
   </div>
