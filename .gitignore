@@ -41,3 +41,7 @@ Thumbs.db
 /web/public/assets
 /web/node_modules
 /web/.puma-dev
+
+# Playwright
+/web/playwright-report/
+/web/test-results/
