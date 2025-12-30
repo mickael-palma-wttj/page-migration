@@ -9,6 +9,7 @@ class OrganizationsController < ApplicationController
   def index
     @query = params[:q].to_s.strip
     @organizations = search_with_export_status if @query.present?
+    @recent_orgs = recent_organizations unless @query.present?
   end
 
   def search
@@ -22,8 +23,10 @@ class OrganizationsController < ApplicationController
 
   def show
     @organization = OrganizationQuery.find_by_reference(@org_ref)
-    @exports = list_exports(org_ref: @org_ref, include_files: true)
-    @command_runs = CommandRun.where(org_ref: @org_ref).recent.limit(ORG_COMMANDS_LIMIT)
+    @current_tab = params[:tab]
+    scope = CommandRun.where(org_ref: @org_ref)
+    scope = scope.by_command(@current_tab) if @current_tab.present?
+    @command_runs = scope.recent.limit(ORG_COMMANDS_LIMIT)
   end
 
   private
@@ -38,6 +41,26 @@ class OrganizationsController < ApplicationController
     end
   rescue => e
     flash.now[:alert] = "Database connection error: #{e.message}"
+    []
+  end
+
+  def recent_organizations
+    CommandRun.where.not(org_ref: [nil, ""])
+      .select(:org_ref)
+      .group(:org_ref)
+      .order(Arel.sql("MAX(created_at) DESC"))
+      .limit(RECENT_ORGS_LIMIT)
+      .map do |cmd|
+        org = OrganizationQuery.find_by_reference(cmd.org_ref)
+        {
+          reference: cmd.org_ref,
+          name: org&.dig(:name) || cmd.org_ref,
+          has_export: export_exists?(cmd.org_ref),
+          last_command_at: CommandRun.where(org_ref: cmd.org_ref).maximum(:created_at)
+        }
+      end
+  rescue => e
+    Rails.logger.error("Failed to fetch recent organizations: #{e.message}")
     []
   end
 end

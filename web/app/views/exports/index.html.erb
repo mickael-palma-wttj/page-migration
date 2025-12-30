@@ -7,7 +7,7 @@
     <% if @exports.any? %>
       <div class="divide-y divide-wttj-gray-light">
         <% @exports.each do |export| %>
-          <%= link_to export_path(export[:id]), class: "block p-4 hover:bg-wttj-beige transition-colors" do %>
+          <%= link_to export_path(export[:id]), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
                 <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">

@@ -34,7 +34,7 @@
       <% if @organizations&.any? %>
         <div class="divide-y divide-wttj-gray-light">
           <% @organizations.each do |org| %>
-            <div class="p-4 hover:bg-wttj-beige transition-colors">
+            <%= link_to organization_path(org[:reference]), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
@@ -45,14 +45,14 @@
                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Export</span>
                   <% end %>
                 </div>
-                <div class="flex items-center gap-2">
-                  <%= link_to "View", organization_path(org[:reference]),
-                      class: "text-wttj-gray-dark hover:text-wttj-black text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
-                  <%= link_to "Extract", new_command_path(org_ref: org[:reference], command: "extract"),
-                      class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black text-sm font-medium px-3 py-1 rounded transition-colors" %>
+                <div class="flex items-center gap-2 text-sm text-wttj-gray-medium">
+                  View
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
                 </div>
               </div>
-            </div>
+            <% end %>
           <% end %>
         </div>
       <% else %>
@@ -63,8 +63,42 @@
       <% end %>
     </div>
   <% else %>
-    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-8 text-center">
-      <p class="text-wttj-gray-dark">Enter a company name or organization reference to search</p>
+    <!-- Recent Organizations -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light">
+      <div class="p-4 border-b border-wttj-gray-light">
+        <h2 class="font-semibold text-wttj-black">Recent Organizations</h2>
+      </div>
+
+      <% if @recent_orgs&.any? %>
+        <div class="divide-y divide-wttj-gray-light">
+          <% @recent_orgs.each do |org| %>
+            <%= link_to organization_path(org[:reference]), class: "block p-4 hover:bg-gray-50 transition-colors" do %>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded border border-wttj-gray-light">
+                    <%= org[:reference] %>
+                  </span>
+                  <h3 class="font-medium text-wttj-black"><%= org[:name] %></h3>
+                  <% if org[:has_export] %>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Has Export</span>
+                  <% end %>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
+                  <span class="text-xs"><%= time_ago_in_words(org[:last_command_at]) %> ago</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-wttj-gray-dark">
+          <p>No recent organizations</p>
+          <p class="text-sm mt-2">Search for an organization to get started</p>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </div>

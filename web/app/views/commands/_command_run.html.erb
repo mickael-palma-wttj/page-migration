@@ -1,66 +1,44 @@
+<% presenter = CommandRunPresenter.new(command_run) %>
 <div class="space-y-6">
   <!-- Header -->
   <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-4">
-        <% case command_run.display_status %>
-        <% when "completed" %>
-          <span class="w-4 h-4 bg-green-500 rounded-full"></span>
-        <% when "failed" %>
-          <span class="w-4 h-4 bg-red-500 rounded-full"></span>
-        <% when "running" %>
-          <span class="w-4 h-4 bg-wttj-yellow rounded-full animate-pulse"></span>
-        <% when "interrupted" %>
-          <span class="w-4 h-4 bg-orange-500 rounded-full"></span>
-        <% else %>
-          <span class="w-4 h-4 bg-wttj-gray-medium rounded-full"></span>
-        <% end %>
+        <%= render "shared/status_indicator", presenter: presenter, size: :large %>
 
         <div>
           <h1 class="text-2xl font-bold text-wttj-black">
-            <span class="font-mono"><%= command_run.command %></span>
-            <% if command_run.org_ref.present? %>
-              <span class="text-wttj-gray-dark font-normal"><%= command_run.org_ref %></span>
+            <span class="font-mono"><%= presenter.command %></span>
+            <% if presenter.org_ref.present? %>
+              <span class="text-wttj-gray-dark font-normal"><%= presenter.org_ref %></span>
             <% end %>
           </h1>
           <div class="flex items-center gap-4 mt-1 text-sm text-wttj-gray-medium">
-            <span>Started: <%= command_run.started_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></span>
-            <% if command_run.formatted_duration %>
-              <span>Duration: <%= command_run.formatted_duration %></span>
+            <span>Started: <%= presenter.formatted_started_at %></span>
+            <% if presenter.formatted_duration %>
+              <span>Duration: <%= presenter.formatted_duration %></span>
             <% end %>
-            <span class="capitalize font-medium
-              <%= case command_run.display_status
-                  when 'completed' then 'text-green-600'
-                  when 'failed' then 'text-red-600'
-                  when 'running' then 'text-wttj-yellow'
-                  when 'interrupted' then 'text-orange-500'
-                  else 'text-wttj-gray-dark'
-                  end %>">
-              <%= command_run.display_status %>
+            <span class="capitalize font-medium <%= presenter.status_text_color %>">
+              <%= presenter.display_status %>
             </span>
           </div>
-          <% if command_run.options.present? && command_run.options.any? %>
+          <% if presenter.formatted_options.any? %>
             <div class="flex flex-wrap gap-2 mt-2">
-              <% command_run.options.each do |key, value| %>
-                <span class="text-xs bg-wttj-beige px-2 py-0.5 rounded">
-                  <span class="text-wttj-gray-dark">--<%= key %>:</span>
-                  <span class="font-mono"><%= value.is_a?(Array) ? value.join(", ") : value %></span>
-                </span>
-              <% end %>
+              <%= render "shared/options_tags", presenter: presenter %>
             </div>
           <% end %>
         </div>
       </div>
 
       <div class="flex gap-2">
-        <% if command_run.interruptable? %>
-          <%= button_to "Interrupt", interrupt_command_path(command_run),
+        <% if presenter.interruptable? %>
+          <%= button_to "Interrupt", interrupt_command_path(presenter),
               method: :post,
               data: { turbo_confirm: "Interrupt this command?" },
               class: "text-sm px-3 py-1 rounded border border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-colors" %>
         <% end %>
-        <% if command_run.finished? && command_run.org_ref.present? %>
-          <% export_id = find_export_id_for_org(command_run.org_ref, command_run: command_run) %>
+        <% if presenter.finished? && presenter.org_ref.present? %>
+          <% export_id = find_export_id_for_org(presenter.org_ref, command_run: command_run) %>
           <% if export_id %>
             <%= link_to "View Export", export_path(export_id),
                 class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
@@ -68,11 +46,11 @@
             <%= link_to "View Exports", exports_path,
                 class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
           <% end %>
-          <%= link_to "Run Again", new_command_path(org_ref: command_run.org_ref, command: command_run.command),
+          <%= link_to "Run Again", new_command_path(org_ref: presenter.org_ref, command: presenter.command),
               class: "text-sm bg-wttj-yellow hover:bg-yellow-400 text-wttj-black px-3 py-1 rounded transition-colors" %>
         <% end %>
-        <% if command_run.finished? %>
-          <%= button_to "Delete", command_path(command_run),
+        <% if presenter.finished? %>
+          <%= button_to "Delete", command_path(presenter),
               method: :delete,
               data: { turbo_confirm: "Delete this command run and its output?" },
               class: "text-sm px-3 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors" %>
@@ -85,27 +63,27 @@
   <div class="bg-wttj-black rounded-lg shadow-sm p-4" data-controller="auto-scroll">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-white font-medium">Output</h2>
-      <% if command_run.stale? %>
+      <% if presenter.stale? %>
         <span class="text-orange-500 text-sm">Interrupted</span>
-      <% elsif command_run.running? %>
+      <% elsif presenter.running? %>
         <span class="text-wttj-yellow text-sm animate-pulse">Running...</span>
       <% end %>
     </div>
-    <div id="output" data-auto-scroll-target="output" class="text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto"><% if command_run.output.present? %><%= command_run.output.strip %><% elsif command_run.pending? %><span class="text-wttj-gray-medium">Waiting to start...</span><% elsif command_run.running? %><span class="text-wttj-gray-medium">Executing...</span><% else %><span class="text-wttj-gray-medium">No output</span><% end %></div>
+    <div id="output" data-auto-scroll-target="output" class="text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto"><% if presenter.output.present? %><%= presenter.output.strip %><% elsif presenter.pending? %><span class="text-wttj-gray-medium">Waiting to start...</span><% elsif presenter.running? %><span class="text-wttj-gray-medium">Executing...</span><% else %><span class="text-wttj-gray-medium">No output</span><% end %></div>
   </div>
 
   <!-- Error -->
-  <% if command_run.error.present? %>
+  <% if presenter.error.present? %>
     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
       <h2 class="text-red-800 font-medium mb-2">Error</h2>
-      <pre class="font-mono text-sm text-red-700 whitespace-pre-wrap"><%= command_run.error %></pre>
+      <pre class="font-mono text-sm text-red-700 whitespace-pre-wrap"><%= presenter.error %></pre>
     </div>
   <% end %>
 
   <!-- Generated Output Files -->
-  <% if command_run.completed? && command_run.org_ref.present? %>
-    <% export_id = find_export_id_for_org(command_run.org_ref, command_run: command_run) %>
-    <% export_files = find_export_files_for_org(command_run.org_ref, command_run: command_run) %>
+  <% if presenter.completed? && presenter.org_ref.present? %>
+    <% export_id = find_export_id_for_org(presenter.org_ref, command_run: command_run) %>
+    <% export_files = find_export_files_for_org(presenter.org_ref, command_run: command_run) %>
     <% if export_files.any? %>
       <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4">
         <div class="flex items-center justify-between mb-3">
@@ -136,5 +114,4 @@
       </div>
     <% end %>
   <% end %>
-
 </div>

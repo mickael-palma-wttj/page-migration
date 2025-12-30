@@ -11,10 +11,10 @@ class ComparisonsController < ApplicationController
 
   def show
     @org_ref = extract_org_ref(params[:id])
-    @language = params[:language] || "fr"
+    @command_run = find_command_run_for_export(params[:id])
+    @language = params[:language] || @command_run&.options&.dig("language") || "fr"
     @source_data = load_source_data(@export_path, @language)
     @all_output_files = list_migration_files(@export_path)
-    @command_run = find_command_run_for_export(params[:id])
   end
 
   private

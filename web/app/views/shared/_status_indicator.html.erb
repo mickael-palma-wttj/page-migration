@@ -1,0 +1,4 @@
+<%# Renders a status indicator dot
+    locals: presenter (CommandRunPresenter), size (:small, :medium, :large) %>
+<% size ||= :medium %>
+<span class="<%= presenter.status_indicator_classes(size: size) %>"></span>
