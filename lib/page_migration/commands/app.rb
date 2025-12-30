@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "bundler"
+
 module PageMigration
   module Commands
     # Starts the Rails web application with foreman (server + background worker)
