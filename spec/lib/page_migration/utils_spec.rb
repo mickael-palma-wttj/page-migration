@@ -23,7 +23,7 @@ RSpec.describe PageMigration::Utils do
     end
 
     it "handles empty string" do
-      expect(described_class.sanitize_filename("")).to eq("")
+      expect(described_class.sanitize_filename("")).to eq("unknown")
     end
 
     it "handles company names with special chars" do

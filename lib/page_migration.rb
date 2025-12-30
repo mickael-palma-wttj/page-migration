@@ -14,3 +14,6 @@ loader.setup
 # Main module for Page Migration CLI
 module PageMigration
 end
+
+# Eager-load errors to ensure PageMigration::Error alias is available
+require_relative "page_migration/errors"
