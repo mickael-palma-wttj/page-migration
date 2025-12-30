@@ -49,7 +49,10 @@ module PageMigration
           system("bin/rails db:prepare --quiet 2>/dev/null")
 
           # Start with foreman (web server + background worker + CSS watcher)
-          exec("foreman", "start", "-f", "Procfile.dev")
+          # Clear bundler env so foreman runs outside the CLI's bundle context
+          Bundler.with_unbundled_env do
+            exec("foreman", "start", "-f", "Procfile.dev")
+          end
         end
       end
     end
