@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
-  PER_PAGE = 50
+  PER_PAGE = 20
 
   def index
     @size = params[:size] if OrganizationStat::SIZES.include?(params[:size])
-    all_stats = OrganizationStat.all(size: @size)
+    @sort = OrganizationStat.valid_sort?(params[:sort]) ? params[:sort] : OrganizationStat::DEFAULT_SORT
+    @direction = OrganizationStat.valid_direction?(params[:direction]) ? params[:direction] : OrganizationStat::DEFAULT_DIRECTION
+    all_stats = OrganizationStat.all(size: @size, sort: @sort, direction: @direction)
     @summary = OrganizationStat.summary(all_stats)
 
     respond_to do |format|

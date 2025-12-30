@@ -42,21 +42,19 @@
       <table class="w-full">
         <thead class="bg-wttj-beige border-b border-wttj-gray-light">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Reference</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Name</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold text-wttj-black">Total</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold text-wttj-black">Published</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Last Published</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold text-wttj-black">Size</th>
+            <%= render "stats/sortable_header", column: "reference", label: "Reference", align: "left" %>
+            <%= render "stats/sortable_header", column: "name", label: "Name", align: "left" %>
+            <%= render "stats/sortable_header", column: "total_pages", label: "Total", align: "right" %>
+            <%= render "stats/sortable_header", column: "published_pages", label: "Published", align: "right" %>
+            <%= render "stats/sortable_header", column: "latest_published_at", label: "Last Published", align: "left" %>
+            <%= render "stats/sortable_header", column: "size_category", label: "Size", align: "center" %>
+            <th class="px-4 py-3 text-center text-sm font-semibold text-wttj-black">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-wttj-gray-light">
           <% @stats.each do |stat| %>
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-3">
-                <%= link_to stat.reference, organization_path(stat.reference),
-                    class: "font-mono text-sm text-wttj-black hover:text-wttj-yellow" %>
-              </td>
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= organization_path(stat.reference) %>'">
+              <td class="px-4 py-3 font-mono text-sm text-wttj-black"><%= stat.reference %></td>
               <td class="px-4 py-3 text-wttj-black max-w-xs truncate" title="<%= stat.name %>">
                 <%= stat.truncated_name %>
               </td>
@@ -69,6 +67,15 @@
                 <span class="inline-block px-2 py-1 text-xs font-medium rounded <%= stat.size_badge_classes %>">
                   <%= stat.size_category %>
                 </span>
+              </td>
+              <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
+                <%= link_to new_command_path(org_ref: stat.reference),
+                    class: "inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-wttj-yellow transition-colors",
+                    title: "Run command" do %>
+                  <svg class="w-5 h-5 text-wttj-gray-dark hover:text-wttj-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                <% end %>
               </td>
             </tr>
           <% end %>
