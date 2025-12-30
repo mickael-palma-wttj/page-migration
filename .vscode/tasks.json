@@ -1,0 +1,138 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CLI: Run Tests",
+      "type": "shell",
+      "command": "bundle exec rspec",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "CLI: Run Linter",
+      "type": "shell",
+      "command": "bundle exec standardrb",
+      "problemMatcher": []
+    },
+    {
+      "label": "CLI: Fix Linting",
+      "type": "shell",
+      "command": "bundle exec standardrb --fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "CLI: Security Audit",
+      "type": "shell",
+      "command": "bundle exec bundle-audit check --update",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Start Server",
+      "type": "shell",
+      "command": "bin/rails server",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Run Tests",
+      "type": "shell",
+      "command": "bin/rails test",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Run E2E Tests",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: E2E Tests (UI Mode)",
+      "type": "shell",
+      "command": "npm run test:ui",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: E2E Tests (Headed)",
+      "type": "shell",
+      "command": "npm run test:headed",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Run Linter",
+      "type": "shell",
+      "command": "bin/rubocop",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Build Tailwind",
+      "type": "shell",
+      "command": "bin/rails tailwindcss:build",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: DB Migrate",
+      "type": "shell",
+      "command": "bin/rails db:migrate",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: DB Prepare",
+      "type": "shell",
+      "command": "bin/rails db:prepare",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Rails Console",
+      "type": "shell",
+      "command": "bin/rails console",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Security Audit (Brakeman)",
+      "type": "shell",
+      "command": "bin/brakeman",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "bundle install && cd web && bundle install && npm install",
+      "problemMatcher": []
+    }
+  ]
+}
