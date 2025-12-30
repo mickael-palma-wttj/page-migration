@@ -6,46 +6,7 @@ module PageMigration
   # CLI parser and dispatcher
   class CliRunner
     COMMANDS = %w[extract tree export migrate health app stats].freeze
-    HELP_TEXT = <<~HELP
-      Page Migration CLI
-
-      Usage: page_migration <command> [options]
-
-      Commands:
-        extract       Extract organization data from database (JSON or simple-json format)
-        tree          Extract page tree hierarchy to JSON
-        export        Export complete content as Markdown (one file per language)
-        migrate       Generate assets using Dust AI (supports --agent-id for model selection)
-        health        Check environment configuration and connectivity
-        app           Start the web interface
-        stats         Show organization statistics with page counts
-
-      Options:
-        -h, --help    Show help for a command
-
-      Examples:
-        page_migration extract Pg4eV6k                    # Extract org data to JSON
-        page_migration extract Pg4eV6k -o custom.json     # Extract to custom file
-        page_migration extract Pg4eV6k -f text            # Extract as plain text
-        page_migration extract Pg4eV6k -f text -l en      # Extract text in English
-        page_migration tree Pg4eV6k                       # Extract and display page tree
-        page_migration tree Pg4eV6k -o tree.json          # Extract to custom file
-        page_migration export Pg4eV6k                     # Export content (fr, en)
-        page_migration export Pg4eV6k -l fr,en,cs         # Export specific languages
-        page_migration export Pg4eV6k --custom-only       # Export only custom pages
-        page_migration export Pg4eV6k --tree              # Export as directory tree
-        page_migration migrate Pg4eV6k                    # Generate AI assets (uses exported MD)
-        page_migration migrate Pg4eV6k -l en              # Generate AI assets using English source
-        page_migration migrate Pg4eV6k --agent-id gpt5    # Use a specific AI model
-        page_migration migrate Pg4eV6k --analysis         # Run page migration fit analysis only
-        page_migration migrate Pg4eV6k --dry-run          # Preview migration without changes
-        page_migration health                              # Verify environment setup
-        page_migration app                                 # Start web UI on port 3000
-        page_migration app -p 4000                         # Start web UI on custom port
-        page_migration stats                               # Show organization page counts
-        page_migration stats -s big                        # Show only big organizations
-        page_migration stats -o orgs.csv                   # Export to CSV
-    HELP
+    HELP_TEXT = File.read(File.expand_path("cli_help.txt", __dir__)).freeze
 
     def initialize(args)
       @args = args
