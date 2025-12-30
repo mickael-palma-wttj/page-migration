@@ -65,3 +65,75 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: page_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Setup external database with test data
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: page_migration_test
+        run: |
+          psql -c "CREATE TABLE IF NOT EXISTS organizations (reference VARCHAR(50) PRIMARY KEY, name VARCHAR(255) NOT NULL);"
+          psql -c "INSERT INTO organizations (reference, name) VALUES ('TEST001', 'Test Organization') ON CONFLICT DO NOTHING;"
+          psql -c "INSERT INTO organizations (reference, name) VALUES ('DEMO123', 'Demo Company') ON CONFLICT DO NOTHING;"
+          psql -c "INSERT INTO organizations (reference, name) VALUES ('SAMPLE', 'Sample Corp') ON CONFLICT DO NOTHING;"
+
+      - name: Prepare Rails test database
+        env:
+          RAILS_ENV: test
+        run: bin/rails db:prepare
+
+      - name: Build Tailwind CSS
+        run: bin/rails tailwindcss:build
+
+      - name: Run Playwright tests
+        env:
+          RAILS_ENV: test
+          CI: true
+          PAGE_MIGRATION_DATABASE_URL: postgres://postgres:postgres@localhost:5432/page_migration_test
+        run: npm test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

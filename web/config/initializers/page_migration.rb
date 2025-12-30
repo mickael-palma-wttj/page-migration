@@ -10,10 +10,12 @@ $LOAD_PATH.unshift(File.join(PAGE_MIGRATION_ROOT, "lib"))
 
 # Parse parent .env but DON'T set DATABASE_URL globally
 # This prevents Rails from using the PostgreSQL database (which would break Solid Queue)
-parent_env = Dotenv.parse(File.join(PAGE_MIGRATION_ROOT, ".env"))
+parent_env_file = File.join(PAGE_MIGRATION_ROOT, ".env")
+parent_env = File.exist?(parent_env_file) ? Dotenv.parse(parent_env_file) : {}
 
 # Store DATABASE_URL for PageMigration to use (but NOT in ENV to avoid polluting Rails)
-PAGE_MIGRATION_DATABASE_URL = parent_env["DATABASE_URL"]
+# Priority: ENV["PAGE_MIGRATION_DATABASE_URL"] (for CI) > parent .env DATABASE_URL
+PAGE_MIGRATION_DATABASE_URL = ENV["PAGE_MIGRATION_DATABASE_URL"] || parent_env["DATABASE_URL"]
 
 # Set all other env vars (except DATABASE_URL which would override Rails SQLite config)
 parent_env.except("DATABASE_URL").each { |k, v| ENV[k] ||= v }
