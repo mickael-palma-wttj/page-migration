@@ -28,18 +28,12 @@
       <div class="text-3xl font-bold text-wttj-black"><%= @summary[:total] %></div>
       <div class="text-sm text-wttj-gray-dark">Total</div>
     </div>
-    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
-      <div class="text-3xl font-bold text-red-600"><%= @summary[:big] %></div>
-      <div class="text-sm text-wttj-gray-dark">Big (&gt;10)</div>
-    </div>
-    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
-      <div class="text-3xl font-bold text-yellow-600"><%= @summary[:medium] %></div>
-      <div class="text-sm text-wttj-gray-dark">Medium (3-10)</div>
-    </div>
-    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
-      <div class="text-3xl font-bold text-green-600"><%= @summary[:small] %></div>
-      <div class="text-sm text-wttj-gray-dark">Small (0-2)</div>
-    </div>
+    <% %w[big medium small].each do |size| %>
+      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
+        <div class="text-3xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
+        <div class="text-sm text-wttj-gray-dark"><%= size.capitalize %></div>
+      </div>
+    <% end %>
   </div>
 
   <!-- Table -->
@@ -57,33 +51,24 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-wttj-gray-light">
-          <% @organizations.each do |org| %>
+          <% @stats.each do |stat| %>
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3">
-                <%= link_to org[:reference], organization_path(org[:reference]),
+                <%= link_to stat.reference, organization_path(stat.reference),
                     class: "font-mono text-sm text-wttj-black hover:text-wttj-yellow" %>
               </td>
-              <td class="px-4 py-3 text-wttj-black max-w-xs truncate" title="<%= org[:name] %>">
-                <%= truncate(org[:name], length: 40) %>
+              <td class="px-4 py-3 text-wttj-black max-w-xs truncate" title="<%= stat.name %>">
+                <%= stat.truncated_name %>
               </td>
-              <td class="px-4 py-3 text-right font-mono text-sm"><%= org[:total_pages] %></td>
-              <td class="px-4 py-3 text-right font-mono text-sm"><%= org[:published_pages] %></td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= stat.total_pages %></td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= stat.published_pages %></td>
               <td class="px-4 py-3 text-sm text-wttj-gray-dark">
-                <% if org[:latest_published_at] %>
-                  <%= org[:latest_published_at].to_s[0..9] %>
-                <% else %>
-                  <span class="text-wttj-gray-medium">-</span>
-                <% end %>
+                <%= stat.formatted_published_date || content_tag(:span, "-", class: "text-wttj-gray-medium") %>
               </td>
               <td class="px-4 py-3 text-center">
-                <% case org[:size_category] %>
-                <% when "big" %>
-                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700">big</span>
-                <% when "medium" %>
-                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-700">medium</span>
-                <% when "small" %>
-                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">small</span>
-                <% end %>
+                <span class="inline-block px-2 py-1 text-xs font-medium rounded <%= stat.size_badge_classes %>">
+                  <%= stat.size_category %>
+                </span>
               </td>
             </tr>
           <% end %>
@@ -91,7 +76,7 @@
       </table>
     </div>
 
-    <% if @organizations.empty? %>
+    <% if @stats.empty? %>
       <div class="p-8 text-center text-wttj-gray-dark">
         No organizations found
       </div>

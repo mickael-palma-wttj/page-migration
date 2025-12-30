@@ -1,59 +1,36 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
-  include Pagy::Backend
-
-  SIZES = %w[big medium small].freeze
   PER_PAGE = 50
 
   def index
-    @size = params[:size] if SIZES.include?(params[:size])
-    all_organizations = OrganizationQuery.stats(size: @size, limit: nil)
-    @summary = calculate_summary(all_organizations)
+    @size = params[:size] if OrganizationStat::SIZES.include?(params[:size])
+    all_stats = OrganizationStat.all(size: @size)
+    @summary = OrganizationStat.summary(all_stats)
 
     respond_to do |format|
       format.html do
-        @pagy, @organizations = pagy_array(all_organizations, limit: PER_PAGE)
+        @pagy, stats = pagy_array(all_stats, limit: PER_PAGE)
+        @stats = stats.map { |s| OrganizationStatPresenter.new(s) }
       end
-      format.csv do
-        @organizations = all_organizations
-        send_csv
-      end
+      format.csv { send_csv(all_stats) }
     end
   rescue => e
     flash.now[:alert] = "Database error: #{e.message}"
-    @organizations = []
+    @stats = []
     @summary = {total: 0, big: 0, medium: 0, small: 0}
   end
 
   private
 
-  def calculate_summary(orgs)
-    by_size = orgs.group_by { |o| o[:size_category] }
-    {
-      total: orgs.size,
-      big: by_size["big"]&.size || 0,
-      medium: by_size["medium"]&.size || 0,
-      small: by_size["small"]&.size || 0
-    }
-  end
-
-  def send_csv
+  def send_csv(stats)
     csv_data = CSV.generate do |csv|
-      csv << %w[reference name total_pages published_pages latest_published size]
-      @organizations.each do |org|
-        csv << [
-          org[:reference],
-          org[:name],
-          org[:total_pages],
-          org[:published_pages],
-          org[:latest_published_at],
-          org[:size_category]
-        ]
-      end
+      csv << OrganizationStat.csv_headers
+      stats.each { |stat| csv << stat.to_csv_row }
     end
 
-    filename = "organization_stats_#{Date.current}.csv"
-    send_data csv_data, filename: filename, type: "text/csv"
+    send_data csv_data,
+      filename: "organization_stats_#{Date.current}.csv",
+      type: "text/csv"
   end
 end
