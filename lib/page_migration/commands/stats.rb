@@ -74,8 +74,7 @@ module PageMigration
       end
 
       def format_header
-        format("%-10s %-40s %6s %6s %-20s %s",
-          "ref", "name", "total", "pub", "latest_published", "size")
+        "ref        name                                      total    pub latest_published     size"
       end
 
       def format_row(row)
@@ -89,7 +88,7 @@ module PageMigration
       end
 
       def truncate(str, max)
-        str.length > max ? "#{str[0..max - 3]}..." : str
+        (str.length > max) ? "#{str[0..max - 3]}..." : str
       end
 
       def print_summary(results)
