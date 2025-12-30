@@ -1,13 +1,13 @@
 <% content_for(:title) { "Run Command - Page Migration" } %>
 
 <%
-  command_tooltips = {
-    "extract" => "Extract organization data from the database into JSON format",
-    "export" => "Export organization pages to Markdown files for review",
-    "migrate" => "Run AI-powered migration using Dust to transform content",
-    "analysis" => "Analyze organization fit for page migration (AI-powered)",
-    "tree" => "Display the page hierarchy tree structure",
-    "health" => "Check system health: database connection, API keys, etc."
+  commands_config = {
+    "extract" => { icon: "📥", label: "Extract", description: "Get org data" },
+    "export" => { icon: "📄", label: "Export", description: "Generate Markdown" },
+    "migrate" => { icon: "🤖", label: "Migrate", description: "Run AI prompts" },
+    "analysis" => { icon: "📊", label: "Analysis", description: "Analyze pages" },
+    "tree" => { icon: "🌳", label: "Tree", description: "Page hierarchy" },
+    "health" => { icon: "🔧", label: "Health", description: "Check setup" }
   }
 %>
 
@@ -23,21 +23,19 @@
     <%= form_with url: commands_path, method: :post, class: "space-y-6", data: { controller: "command-form" } do |f| %>
       <!-- Command Selection -->
       <div>
-        <label class="block text-sm font-medium text-wttj-black mb-2">Command</label>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <label class="block text-sm font-medium text-wttj-black mb-3">Command</label>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
           <% CommandRun::COMMANDS.each do |cmd| %>
-            <label class="relative cursor-pointer group">
+            <% config = commands_config[cmd] || { icon: "📋", label: cmd.capitalize, description: "" } %>
+            <label class="cursor-pointer">
               <input type="radio" name="command" value="<%= cmd %>"
                      <%= "checked" if @command == cmd %>
                      data-action="change->command-form#validate"
                      class="peer sr-only">
-              <div class="p-3 rounded-lg border border-wttj-gray-light text-center peer-checked:border-wttj-yellow peer-checked:bg-wttj-yellow peer-checked:bg-opacity-10 hover:border-wttj-gray-dark transition-colors">
-                <span class="font-medium text-wttj-black"><%= cmd.capitalize %></span>
-              </div>
-              <!-- Tooltip -->
-              <div class="absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-wttj-black rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none">
-                <%= command_tooltips[cmd] %>
-                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-wttj-black"></div>
+              <div class="flex flex-col items-center p-4 rounded-lg border border-wttj-gray-light peer-checked:border-wttj-yellow peer-checked:bg-wttj-beige hover:border-wttj-yellow hover:bg-wttj-beige transition-colors">
+                <span class="text-2xl mb-2"><%= config[:icon] %></span>
+                <span class="font-medium text-wttj-black"><%= config[:label] %></span>
+                <span class="text-xs text-wttj-gray-dark"><%= config[:description] %></span>
               </div>
             </label>
           <% end %>
