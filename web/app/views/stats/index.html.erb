@@ -1,0 +1,107 @@
+<% content_for(:title) { "Organization Stats - Page Migration" } %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold text-wttj-black">Organization Stats</h1>
+    <%= link_to "Export CSV", stats_path(format: :csv, size: @size, limit: @limit),
+        class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
+    <%= form_with url: stats_path, method: :get, class: "flex flex-wrap gap-4 items-end", data: { turbo_frame: "_top" } do |f| %>
+      <div>
+        <label class="block text-sm font-medium text-wttj-gray-dark mb-1">Size Category</label>
+        <%= f.select :size,
+            options_for_select([["All sizes", ""], ["Big (>10 pages)", "big"], ["Medium (3-10 pages)", "medium"], ["Small (0-2 pages)", "small"]], @size),
+            {},
+            class: "px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-wttj-gray-dark mb-1">Limit</label>
+        <%= f.select :limit,
+            options_for_select([[50, 50], [100, 100], [200, 200], [500, 500]], @limit),
+            {},
+            class: "px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none" %>
+      </div>
+      <%= f.submit "Apply",
+          class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-6 py-2 rounded-lg transition-colors cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <!-- Summary -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
+      <div class="text-3xl font-bold text-wttj-black"><%= @summary[:total] %></div>
+      <div class="text-sm text-wttj-gray-dark">Total</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
+      <div class="text-3xl font-bold text-red-600"><%= @summary[:big] %></div>
+      <div class="text-sm text-wttj-gray-dark">Big (&gt;10)</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
+      <div class="text-3xl font-bold text-yellow-600"><%= @summary[:medium] %></div>
+      <div class="text-sm text-wttj-gray-dark">Medium (3-10)</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
+      <div class="text-3xl font-bold text-green-600"><%= @summary[:small] %></div>
+      <div class="text-sm text-wttj-gray-dark">Small (0-2)</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-wttj-beige border-b border-wttj-gray-light">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Reference</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Name</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold text-wttj-black">Total</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold text-wttj-black">Published</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-wttj-black">Last Published</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold text-wttj-black">Size</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-wttj-gray-light">
+          <% @organizations.each do |org| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">
+                <%= link_to org[:reference], organization_path(org[:reference]),
+                    class: "font-mono text-sm text-wttj-black hover:text-wttj-yellow" %>
+              </td>
+              <td class="px-4 py-3 text-wttj-black max-w-xs truncate" title="<%= org[:name] %>">
+                <%= truncate(org[:name], length: 40) %>
+              </td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= org[:total_pages] %></td>
+              <td class="px-4 py-3 text-right font-mono text-sm"><%= org[:published_pages] %></td>
+              <td class="px-4 py-3 text-sm text-wttj-gray-dark">
+                <% if org[:latest_published_at] %>
+                  <%= org[:latest_published_at].to_s[0..9] %>
+                <% else %>
+                  <span class="text-wttj-gray-medium">-</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% case org[:size_category] %>
+                <% when "big" %>
+                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700">big</span>
+                <% when "medium" %>
+                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-700">medium</span>
+                <% when "small" %>
+                  <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">small</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @organizations.empty? %>
+      <div class="p-8 text-center text-wttj-gray-dark">
+        No organizations found
+      </div>
+    <% end %>
+  </div>
+</div>

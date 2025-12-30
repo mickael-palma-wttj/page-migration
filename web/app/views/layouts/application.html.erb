@@ -39,6 +39,7 @@
           <div class="flex items-center gap-6">
             <%= link_to "Dashboard", root_path, class: "hover:text-wttj-yellow transition-colors #{request.path == root_path ? 'text-wttj-yellow' : ''}" %>
             <%= link_to "Search", organizations_path, class: "hover:text-wttj-yellow transition-colors #{request.path.start_with?('/organizations') ? 'text-wttj-yellow' : ''}" %>
+            <%= link_to "Stats", stats_path, class: "hover:text-wttj-yellow transition-colors #{request.path.start_with?('/stats') ? 'text-wttj-yellow' : ''}" %>
             <%= link_to "Commands", commands_path, class: "hover:text-wttj-yellow transition-colors #{request.path.start_with?('/commands') ? 'text-wttj-yellow' : ''}" %>
             <%= link_to "Exports", exports_path, class: "hover:text-wttj-yellow transition-colors #{request.path.start_with?('/exports') ? 'text-wttj-yellow' : ''}" %>
             <%= link_to "Compare", comparisons_path, class: "hover:text-wttj-yellow transition-colors #{request.path.start_with?('/comparisons') ? 'text-wttj-yellow' : ''}" %>

@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   # Dashboard
   root "dashboard#index"
 
+  # Organization stats
+  resources :stats, only: [:index]
+
   # Company search (live database)
   resources :organizations, only: [:index, :show] do
     collection do
