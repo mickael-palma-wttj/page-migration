@@ -52,7 +52,15 @@ module PageMigration
 
           # Start with foreman (web server + background worker + CSS watcher)
           # Clear bundler env so foreman runs outside the CLI's bundle context
+          # Preserve PORT and PAGE_MIGRATION_ROOT env vars
+          port = @port
+          page_migration_root = ENV["PAGE_MIGRATION_ROOT"]
+          objc_fork_safety = ENV["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"]
+
           Bundler.with_unbundled_env do
+            ENV["PORT"] = port.to_s
+            ENV["PAGE_MIGRATION_ROOT"] = page_migration_root
+            ENV["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = objc_fork_safety if objc_fork_safety
             exec("foreman", "start", "-f", "Procfile.dev")
           end
         end
