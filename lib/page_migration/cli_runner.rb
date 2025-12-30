@@ -82,7 +82,10 @@ module PageMigration
         opts.on("-o", "--output FILE", "Output file") { |v| @options[:output] = v }
         opts.on("-f", "--format FORMAT", "Output format: json or simple-json") { |v| @options[:format] = v }
         opts.on("-l", "--language LANG", "Language for content export (default: fr)") { |v| @options[:language] = v }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          exit
+        end
       end
     end
 
@@ -160,7 +163,10 @@ module PageMigration
         opts.on("-n", "--dry-run", "Show what would be done without making changes") { @options[:dry_run] = true }
         opts.on("--no-cache", "Disable prompt caching (re-run all prompts)") { @options[:cache] = false }
         opts.on("-d", "--debug", "Enable debug mode with detailed output") { @options[:debug] = true }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          exit
+        end
       end
     end
 
@@ -176,7 +182,10 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration health [options]"
         opts.on("-d", "--debug", "Enable debug mode") { @options[:debug] = true }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          exit
+        end
       end
     end
 
@@ -191,7 +200,10 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration app [options]"
         opts.on("-p", "--port PORT", Integer, "Port number (default: 3000)") { |p| @options[:port] = p }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          exit
+        end
       end
     end
 
@@ -209,7 +221,10 @@ module PageMigration
         opts.on("-s", "--size SIZE", "Filter by size: small, medium, big") { |s| @options[:size] = s }
         opts.on("-o", "--output FILE", "Export to CSV file") { |f| @options[:output] = f }
         opts.on("-d", "--debug", "Enable debug mode") { @options[:debug] = true }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
+        opts.on("-h", "--help", "Show this help") do
+          puts opts
+          exit
+        end
       end
     end
 
