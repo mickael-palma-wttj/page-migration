@@ -7,33 +7,34 @@
         class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-2 rounded-lg transition-colors" %>
   </div>
 
-  <!-- Filters -->
-  <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
-    <%= form_with url: stats_path, method: :get, class: "flex flex-wrap gap-4 items-end", data: { turbo_frame: "_top" } do |f| %>
-      <div>
-        <label class="block text-sm font-medium text-wttj-gray-dark mb-1">Size Category</label>
+  <!-- Filters & Summary -->
+  <div class="flex items-center justify-between gap-6">
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4">
+      <%= form_with url: stats_path, method: :get, class: "flex gap-3 items-center", data: { turbo_frame: "_top" } do |f| %>
+        <label class="text-sm font-medium text-wttj-gray-dark">Size:</label>
         <%= f.select :size,
-            options_for_select([["All sizes", ""], ["Big (>10 pages)", "big"], ["Medium (3-10 pages)", "medium"], ["Small (0-2 pages)", "small"]], @size),
+            options_for_select([["All", ""], ["Big", "big"], ["Medium", "medium"], ["Small", "small"]], @size),
             {},
-            class: "px-4 py-2 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none" %>
-      </div>
-      <%= f.submit "Filter",
-          class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-6 py-2 rounded-lg transition-colors cursor-pointer" %>
-    <% end %>
-  </div>
-
-  <!-- Summary -->
-  <div class="grid grid-cols-4 gap-4">
-    <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
-      <div class="text-3xl font-bold text-wttj-black"><%= @summary[:total] %></div>
-      <div class="text-sm text-wttj-gray-dark">Total</div>
+            class: "px-3 py-1.5 rounded-lg border border-wttj-gray-light focus:border-wttj-yellow focus:ring-2 focus:ring-wttj-yellow focus:ring-opacity-50 outline-none text-sm" %>
+        <%= f.submit "Filter",
+            class: "bg-wttj-yellow hover:bg-yellow-400 text-wttj-black font-semibold px-4 py-1.5 rounded-lg transition-colors cursor-pointer text-sm" %>
+      <% end %>
     </div>
-    <% %w[big medium small].each do |size| %>
-      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-4 text-center">
-        <div class="text-3xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
-        <div class="text-sm text-wttj-gray-dark"><%= size.capitalize %></div>
+
+    <!-- Summary -->
+    <div class="flex gap-3">
+      <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-4 py-2 text-center min-w-[80px]">
+        <div class="text-2xl font-bold text-wttj-black"><%= @summary[:total] %></div>
+        <div class="text-xs text-wttj-gray-dark">Total</div>
       </div>
-    <% end %>
+      <% %w[big medium small].each do |size| %>
+        <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light px-4 py-2 text-center min-w-[80px]">
+          <div class="text-2xl font-bold <%= OrganizationStatPresenter.summary_color(size) %>"><%= @summary[size.to_sym] %></div>
+          <div class="text-xs text-wttj-gray-dark"><%= size.capitalize %></div>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <!-- Table -->
