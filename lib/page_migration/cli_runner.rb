@@ -5,7 +5,7 @@ require "optparse"
 module PageMigration
   # CLI parser and dispatcher
   class CliRunner
-    COMMANDS = %w[extract tree export convert run migrate health app].freeze
+    COMMANDS = %w[extract tree export migrate health app].freeze
     HELP_TEXT = <<~HELP
       Page Migration CLI
 
@@ -15,9 +15,7 @@ module PageMigration
         extract       Extract organization data from database (JSON or simple-json format)
         tree          Extract page tree hierarchy to JSON
         export        Export complete content as Markdown (one file per language)
-        convert       Convert JSON data to Markdown files
-        run           Run both extract and convert in sequence
-        migrate       Generate assets using Dust AI based on prompts
+        migrate       Generate assets using Dust AI (supports --agent-id for model selection)
         health        Check environment configuration and connectivity
         app           Start the web interface
 
@@ -35,11 +33,9 @@ module PageMigration
         page_migration export Pg4eV6k -l fr,en,cs         # Export specific languages
         page_migration export Pg4eV6k --custom-only       # Export only custom pages
         page_migration export Pg4eV6k --tree              # Export as directory tree
-        page_migration convert                            # Convert default JSON to Markdown
-        page_migration convert -i data.json -o output/    # Custom input and output
-        page_migration run Pg4eV6k                        # Full pipeline
         page_migration migrate Pg4eV6k                    # Generate AI assets (uses exported MD)
         page_migration migrate Pg4eV6k -l en              # Generate AI assets using English source
+        page_migration migrate Pg4eV6k --agent-id gpt5    # Use a specific AI model
         page_migration migrate Pg4eV6k --analysis         # Run page migration fit analysis only
         page_migration migrate Pg4eV6k --dry-run          # Preview migration without changes
         page_migration health                              # Verify environment setup
@@ -139,42 +135,6 @@ module PageMigration
       end
     end
 
-    def run_convert
-      parser = build_convert_parser
-      parser.parse!(@args)
-
-      org_ref = @args.shift
-
-      Commands::Convert.new(org_ref, **@options).call
-    end
-
-    def build_convert_parser
-      OptionParser.new do |opts|
-        opts.banner = "Usage: page_migration convert [org_ref] [options]"
-        opts.on("-i", "--input FILE", "Input JSON file") { |v| @options[:input] = v }
-        opts.on("-o", "--output-dir DIR", "Output directory") { |v| @options[:output_dir] = v }
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
-      end
-    end
-
-    def run_run
-      parser = build_run_parser
-      parser.parse!(@args)
-
-      org_ref = validate_org_ref(@args.shift, parser)
-
-      Commands::Run.new(org_ref, **@options).call
-    rescue Errors::ValidationError => e
-      abort "Error: #{e.message}"
-    end
-
-    def build_run_parser
-      OptionParser.new do |opts|
-        opts.banner = "Usage: page_migration run <org_reference> [options]"
-        opts.on("-h", "--help", "Show this help") { |_| puts opts and exit }
-      end
-    end
-
     def run_migrate
       parser = build_migrate_parser
       parser.parse!(@args)
@@ -191,6 +151,7 @@ module PageMigration
       OptionParser.new do |opts|
         opts.banner = "Usage: page_migration migrate <org_reference> [options]"
         opts.on("-l", "--language LANG", "Language for content generation (default: fr)") { |v| @options[:language] = v }
+        opts.on("-m", "--agent-id MODEL", "AI model/agent ID (default: DUST_AGENT_ID env)") { |v| @options[:agent_id] = v }
         opts.on("-a", "--analysis", "Run page migration fit analysis only") { @options[:analysis] = true }
         opts.on("-n", "--dry-run", "Show what would be done without making changes") { @options[:dry_run] = true }
         opts.on("--no-cache", "Disable prompt caching (re-run all prompts)") { @options[:cache] = false }

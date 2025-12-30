@@ -91,11 +91,7 @@ class StreamingIO
   end
 
   def output_html(output)
-    <<~HTML.squish
-      <div id="output" data-auto-scroll-target="output"
-           class="text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto">
-        #{ERB::Util.html_escape(output.strip)}
-      </div>
-    HTML
+    escaped_output = ERB::Util.html_escape(output.strip)
+    %(<div id="output" data-auto-scroll-target="output" class="text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto">#{escaped_output}</div>)
   end
 end

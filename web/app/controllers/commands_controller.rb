@@ -12,7 +12,10 @@ class CommandsController < ApplicationController
     "health" => HealthJob
   }.freeze
 
+  COMMANDS_REQUIRING_ORG = %w[extract export migrate analysis tree].freeze
+
   before_action :set_command_run, only: [:show, :destroy, :interrupt]
+  before_action :validate_org_ref, only: [:create]
 
   def index
     @current_tab = params[:tab]
@@ -64,8 +67,17 @@ class CommandsController < ApplicationController
     @command_run = CommandRun.find(params[:id])
   end
 
+  def validate_org_ref
+    command = command_params[:command]
+    org_ref = command_params[:org_ref]
+
+    if COMMANDS_REQUIRING_ORG.include?(command) && org_ref.blank?
+      redirect_to new_command_path(command: command), alert: "Organization is required for #{command} command"
+    end
+  end
+
   def command_params
-    @command_params ||= params.permit(:command, :org_ref, :format_option, :language, :languages, :authenticity_token, :commit)
+    @command_params ||= params.permit(:command, :org_ref, :format_option, :language, :languages, :agent_id, :authenticity_token, :commit)
   end
 
   def build_options
@@ -73,6 +85,7 @@ class CommandsController < ApplicationController
       opts[:format] = command_params[:format_option] if command_params[:format_option].present?
       opts[:language] = command_params[:language] if command_params[:language].present?
       opts[:languages] = command_params[:languages].split(",").map(&:strip) if command_params[:languages].present?
+      opts[:agent_id] = command_params[:agent_id] if command_params[:agent_id].present?
     end
   end
 end

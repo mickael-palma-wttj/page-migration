@@ -38,6 +38,16 @@
 
                 <span class="font-mono text-sm bg-wttj-beige px-2 py-1 rounded"><%= cmd.command %></span>
                 <span class="text-wttj-gray-dark"><%= cmd.org_ref || "—" %></span>
+                <% if cmd.options.present? && cmd.options.any? %>
+                  <div class="flex flex-wrap gap-1">
+                    <% cmd.options.each do |key, value| %>
+                      <span class="text-xs bg-wttj-beige px-2 py-0.5 rounded">
+                        <span class="text-wttj-gray-dark">--<%= key %>:</span>
+                        <span class="font-mono"><%= value.is_a?(Array) ? value.join(", ") : value %></span>
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
               <div class="flex items-center gap-4 text-sm text-wttj-gray-medium">
                 <% if cmd.formatted_duration %>

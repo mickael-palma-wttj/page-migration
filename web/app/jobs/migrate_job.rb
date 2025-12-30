@@ -11,7 +11,8 @@ class MigrateJob < ApplicationJob
       PageMigration::Config.with_output_root(command_run.export_data_directory.to_s) do
         PageMigration::Commands::Migrate.new(
           org_ref,
-          language: options["language"] || "fr"
+          language: options["language"] || "fr",
+          agent_id: options["agent_id"]
         ).call
       end
     end

@@ -38,9 +38,7 @@ module PageMigration
 
         @output
       rescue PG::Error => e
-        abort "❌ Database error: #{e.message}"
-      rescue PageMigration::Error => e
-        abort "❌ Error: #{e.message}"
+        raise PageMigration::DatabaseError, e.message
       end
 
       private

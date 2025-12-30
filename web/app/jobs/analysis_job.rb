@@ -12,7 +12,8 @@ class AnalysisJob < ApplicationJob
         PageMigration::Commands::Migrate.new(
           org_ref,
           language: options["language"] || "fr",
-          analysis: true
+          analysis: true,
+          agent_id: options["agent_id"]
         ).call
       end
     end

@@ -34,7 +34,7 @@ RSpec.describe PageMigration::CliRunner do
   describe "COMMANDS" do
     it "includes all expected commands" do
       expect(described_class::COMMANDS).to contain_exactly(
-        "extract", "tree", "export", "convert", "run", "migrate", "health", "app"
+        "extract", "tree", "export", "migrate", "health", "app"
       )
     end
   end
@@ -108,36 +108,6 @@ RSpec.describe PageMigration::CliRunner do
           .and_return(double(call: nil))
         runner.call
       end
-    end
-  end
-
-  describe "convert command" do
-    let(:runner) { described_class.new(["convert"]) }
-
-    before do
-      allow(PageMigration::Commands::Convert).to receive(:new).and_return(double(call: nil))
-    end
-
-    it "creates Convert command without requiring org_ref" do
-      expect(PageMigration::Commands::Convert).to receive(:new)
-        .with(nil)
-        .and_return(double(call: nil))
-      runner.call
-    end
-  end
-
-  describe "run command" do
-    let(:runner) { described_class.new(["run", "Pg4eV6k"]) }
-
-    before do
-      allow(PageMigration::Commands::Run).to receive(:new).and_return(double(call: nil))
-    end
-
-    it "creates Run command" do
-      expect(PageMigration::Commands::Run).to receive(:new)
-        .with("Pg4eV6k")
-        .and_return(double(call: nil))
-      runner.call
     end
   end
 

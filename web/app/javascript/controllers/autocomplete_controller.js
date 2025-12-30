@@ -80,6 +80,8 @@ export default class extends Controller {
       this.inputTarget.value = `${org.reference} - ${org.name}`
       this.displayTarget.textContent = org.name
       this.displayTarget.classList.remove("hidden")
+      // Dispatch event for other controllers to react
+      this.hiddenTarget.dispatchEvent(new Event("change", { bubbles: true }))
     }
 
     this.hideResults()
@@ -105,6 +107,7 @@ export default class extends Controller {
           this.inputTarget.value = `${org.reference} - ${org.name}`
           this.displayTarget.textContent = org.name
           this.displayTarget.classList.remove("hidden")
+          this.hiddenTarget.dispatchEvent(new Event("change", { bubbles: true }))
           this.hideResults()
         }
         break
@@ -131,6 +134,7 @@ export default class extends Controller {
     this.displayTarget.textContent = ""
     this.displayTarget.classList.add("hidden")
     this.hideResults()
+    this.hiddenTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.inputTarget.focus()
   }
 
