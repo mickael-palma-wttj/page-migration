@@ -89,15 +89,10 @@ module PageMigration
     end
 
     def run_migrate
-      parser = build_migrate_parser
-      parser.parse!(@args)
-
-      org_ref = validate_org_ref(@args.shift, parser)
-      @options[:language] = Validator.validate_language!(@options[:language])
-
-      Commands::Migrate.new(org_ref, **@options).call
-    rescue Errors::ValidationError => e
-      abort "Error: #{e.message}"
+      run_with_org_ref(build_migrate_parser) do |org_ref|
+        @options[:language] = Validator.validate_language!(@options[:language])
+        Commands::Migrate.new(org_ref, **@options).call
+      end
     end
 
     def build_migrate_parser
