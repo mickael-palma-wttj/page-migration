@@ -4,7 +4,6 @@
 # Wraps OrganizationQuery.stats and provides domain logic
 class OrganizationStat
   SIZES = %w[big medium small].freeze
-  SIZE_THRESHOLDS = {big: 10, medium: 2}.freeze
   SORTABLE_COLUMNS = %w[reference name total_pages published_pages latest_published_at size_category].freeze
   DEFAULT_SORT = "total_pages"
   DEFAULT_DIRECTION = "desc"
