@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
+  include StatsFilterable
+
   PER_PAGE = 20
 
   def index
-    @size = params[:size] if OrganizationStat::SIZES.include?(params[:size])
-    @sort = OrganizationStat.valid_sort?(params[:sort]) ? params[:sort] : OrganizationStat::DEFAULT_SORT
-    @direction = OrganizationStat.valid_direction?(params[:direction]) ? params[:direction] : OrganizationStat::DEFAULT_DIRECTION
-    all_stats = OrganizationStat.all(size: @size, sort: @sort, direction: @direction)
+    @size, @sort, @direction = stats_filter_params.values_at(:size, :sort, :direction)
+    all_stats = OrganizationStat.all(**stats_filter_params)
     @summary = OrganizationStat.summary(all_stats)
 
     respond_to do |format|
@@ -17,7 +17,7 @@ class StatsController < ApplicationController
       end
       format.csv { send_csv(all_stats) }
     end
-  rescue => e
+  rescue PG::Error => e
     flash.now[:alert] = "Database error: #{e.message}"
     @stats = []
     @summary = {total: 0, big: 0, medium: 0, small: 0}
