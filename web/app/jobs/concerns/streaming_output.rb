@@ -28,7 +28,7 @@ module StreamingOutput
     command_run.ensure_output_directory
     command_run.output = ""
     command_run.start!
-    sleep(0.5) # Allow WebSocket subscription to establish after page load
+    sleep(1) # Allow page load, JS init, and WebSocket subscription to establish
     broadcast_update(command_run)
   end
 
