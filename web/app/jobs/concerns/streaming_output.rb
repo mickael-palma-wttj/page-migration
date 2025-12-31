@@ -2,17 +2,34 @@
 
 require_relative "streaming_io"
 
+# Concern for jobs that execute commands with streaming output.
+# Captures stdout/stderr and broadcasts to Turbo Streams in real-time.
+#
+# @example
+#   class MyJob < ApplicationJob
+#     include StreamingOutput
+#
+#     def perform(command_run_id)
+#       command_run = CommandRun.find(command_run_id)
+#       execute_with_streaming(command_run) do
+#         puts "Working..."
+#       end
+#     end
+#   end
+#
 module StreamingOutput
   extend ActiveSupport::Concern
 
   class InterruptedError < StandardError; end
 
+  WEBSOCKET_INIT_DELAY = 0.5
+
   private
 
   def execute_with_streaming(command_run)
-    setup_command(command_run)
-    streaming_io = capture_output(command_run) { yield }
-    finalize_command(command_run, streaming_io)
+    start_command(command_run)
+    capture_output(command_run) { yield }
+    finalize_command(command_run)
   end
 
   def check_interrupted!(command_run)
@@ -20,67 +37,68 @@ module StreamingOutput
     raise InterruptedError if command_run.interrupted?
   end
 
-  def broadcast_update(command_run)
-    command_run.broadcast_update
-  end
+  # Command lifecycle
 
-  def setup_command(command_run)
+  def start_command(command_run)
     command_run.ensure_output_directory
     command_run.output = ""
     command_run.start!
-    sleep(2) # Allow page load, JS init, and WebSocket subscription to establish
-    broadcast_update(command_run)
+    sleep(WEBSOCKET_INIT_DELAY)
+    command_run.broadcast_update
   end
 
+  def finalize_command(command_run)
+    command_run.reload
+    command_run.broadcast_update
+  end
+
+  # Output capture
+
   def capture_output(command_run)
+    with_redirected_io(command_run) do |streaming_io|
+      yield
+      on_success(command_run, streaming_io)
+    rescue InterruptedError
+      on_interruption(command_run, streaming_io)
+    rescue => e
+      on_error(command_run, streaming_io, e)
+    end
+  end
+
+  def with_redirected_io(command_run)
     original_stdout, original_stderr = $stdout, $stderr
     streaming_io = StreamingIO.new(command_run)
     $stdout = $stderr = streaming_io
 
-    begin
-      yield
-      handle_success(command_run, streaming_io)
-    rescue InterruptedError
-      handle_interruption(command_run, streaming_io)
-    rescue => e
-      handle_error(command_run, streaming_io, e)
-    ensure
-      $stdout, $stderr = original_stdout, original_stderr
-    end
-
-    streaming_io
+    yield streaming_io
+  ensure
+    $stdout, $stderr = original_stdout, original_stderr
   end
 
-  def handle_success(command_run, streaming_io)
-    streaming_io.suppress_broadcast!
+  # Result handlers
+
+  def on_success(command_run, streaming_io)
+    streaming_io.stop!
     streaming_io.flush
     command_run.reload
-    return if command_run.interrupted?
-
-    command_run.complete!
+    command_run.complete! unless command_run.interrupted?
   end
 
-  def handle_interruption(command_run, streaming_io)
-    streaming_io.suppress_broadcast!
-    streaming_io.flush
+  def on_interruption(command_run, streaming_io)
+    streaming_io.stop!
     command_run.append_output("\n⚠️ Command interrupted by user\n")
+    streaming_io.flush
   end
 
-  def handle_error(command_run, streaming_io, error)
-    streaming_io.suppress_broadcast!
+  def on_error(command_run, streaming_io, error)
+    streaming_io.stop!
     streaming_io.flush
     command_run.reload
-    return if command_run.interrupted?
-
-    command_run.fail_with_error!(format_error(error))
+    command_run.fail_with_error!(format_error(error)) unless command_run.interrupted?
   end
 
   def format_error(error)
-    "#{error.class}: #{error.message}\n#{error.backtrace&.first(10)&.join("\n")}"
-  end
-
-  def finalize_command(command_run, _streaming_io)
-    command_run.reload
-    broadcast_update(command_run)
+    backtrace = error.backtrace&.first(10)&.join("\n")
+    "#{error.class}: #{error.message}\n#{backtrace}"
   end
 end
