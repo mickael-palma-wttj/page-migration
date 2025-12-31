@@ -22,16 +22,8 @@ class OrganizationStat
     @size_category = size_category
   end
 
-  def big?
-    size_category == "big"
-  end
-
-  def medium?
-    size_category == "medium"
-  end
-
-  def small?
-    size_category == "small"
+  SIZES.each do |size|
+    define_method("#{size}?") { size_category == size }
   end
 
   def to_param
@@ -58,12 +50,9 @@ class OrganizationStat
 
     def summary(stats)
       by_size = stats.group_by(&:size_category)
-      {
-        total: stats.size,
-        big: by_size["big"]&.size || 0,
-        medium: by_size["medium"]&.size || 0,
-        small: by_size["small"]&.size || 0
-      }
+      SIZES.each_with_object({total: stats.size}) do |size, hash|
+        hash[size.to_sym] = by_size[size]&.size || 0
+      end
     end
 
     def csv_headers
@@ -84,11 +73,12 @@ class OrganizationStat
     end
 
     def sort_stats(stats, column, direction)
-      sorted = stats.sort_by do |stat|
-        value = stat.public_send(column)
-        value.nil? ? "" : value
-      end
-      (direction == "desc") ? sorted.reverse : sorted
+      sorted = stats.sort_by { |stat| stat.public_send(column) || "" }
+      descending?(direction) ? sorted.reverse : sorted
+    end
+
+    def descending?(direction)
+      direction == "desc"
     end
   end
 end

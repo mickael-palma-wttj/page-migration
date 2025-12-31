@@ -29,8 +29,7 @@ class OrganizationStatPresenter
   end
 
   def formatted_published_date
-    return nil unless latest_published_at
-    latest_published_at.to_s[0..9]
+    latest_published_at&.to_s&.slice(0, 10) || "—"
   end
 
   def size_badge_classes
