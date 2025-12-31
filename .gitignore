@@ -40,6 +40,7 @@ Thumbs.db
 /web/db/*.sqlite3-*
 /web/public/assets
 /web/node_modules
+/web/app/assets/builds/
 /web/.puma-dev
 
 # Playwright
