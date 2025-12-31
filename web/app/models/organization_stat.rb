@@ -58,6 +58,13 @@ class OrganizationStat
       %w[reference name total_pages published_pages latest_published size]
     end
 
+    def to_csv(stats)
+      CSV.generate do |csv|
+        csv << csv_headers
+        stats.each { |stat| csv << stat.to_csv_row }
+      end
+    end
+
     private
 
     def from_hash(row)

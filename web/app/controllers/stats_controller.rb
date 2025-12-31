@@ -26,12 +26,7 @@ class StatsController < ApplicationController
   private
 
   def send_csv(stats)
-    csv_data = CSV.generate do |csv|
-      csv << OrganizationStat.csv_headers
-      stats.each { |stat| csv << stat.to_csv_row }
-    end
-
-    send_data csv_data,
+    send_data OrganizationStat.to_csv(stats),
       filename: "organization_stats_#{Date.current}.csv",
       type: "text/csv"
   end
