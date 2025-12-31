@@ -4,6 +4,5 @@ import "controllers"
 import { createConsumer } from "@rails/actioncable"
 
 // Create ActionCable consumer early so Turbo Streams can connect immediately
-window.Turbo.connectStreamSource = window.Turbo.connectStreamSource || (() => {})
 const consumer = createConsumer()
 window.cable = consumer
