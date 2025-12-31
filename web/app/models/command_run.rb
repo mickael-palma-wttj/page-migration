@@ -1,29 +1,51 @@
 # frozen_string_literal: true
 
 class CommandRun < ApplicationRecord
+  include AASM
   include CommandRun::OutputStorage
   include CommandRun::Broadcasting
 
-  STATUSES = %w[pending running completed failed interrupted].freeze
   COMMANDS = %w[extract export migrate analysis tree health].freeze
   STALE_THRESHOLD = 5.minutes
 
   # Validations
   validates :command, presence: true, inclusion: {in: COMMANDS}
-  validates :status, presence: true, inclusion: {in: STATUSES}
   validates :org_ref, length: {maximum: 50}, allow_blank: true
 
   # Callbacks
   after_destroy :cleanup_output_directory
 
+  # State machine
+  aasm column: :status do
+    state :pending, initial: true
+    state :running
+    state :completed
+    state :failed
+    state :interrupted
+
+    event :start do
+      transitions from: :pending, to: :running
+      after { update!(started_at: Time.current) }
+    end
+
+    event :complete do
+      transitions from: :running, to: :completed
+      after { update!(completed_at: Time.current) }
+    end
+
+    event :fail, after: :record_failure do
+      transitions from: :running, to: :failed
+    end
+
+    event :interrupt do
+      transitions from: [:pending, :running], to: :interrupted
+      after { update!(completed_at: Time.current, error: "Interrupted by user") }
+    end
+  end
+
   # Scopes - status filters
   scope :recent, -> { order(created_at: :desc) }
-  scope :pending, -> { where(status: "pending") }
-  scope :running, -> { where(status: "running") }
-  scope :completed, -> { where(status: "completed") }
-  scope :failed, -> { where(status: "failed") }
   scope :finished, -> { where(status: %w[completed failed interrupted]) }
-  scope :interrupted, -> { where(status: "interrupted") }
   scope :stale, -> { where(status: %w[pending running]).where("updated_at < ?", STALE_THRESHOLD.ago) }
 
   # Scopes - command filters
@@ -34,17 +56,12 @@ class CommandRun < ApplicationRecord
   scope :created_today, -> { where(created_at: Time.current.beginning_of_day..) }
   scope :created_this_week, -> { where(created_at: 1.week.ago..) }
 
-  # Status predicates using inquiry
-  STATUSES.each do |status_name|
-    define_method(:"#{status_name}?") { status == status_name }
-  end
-
   def finished?
     completed? || failed? || interrupted?
   end
 
   def interruptable?
-    pending? || running?
+    may_interrupt?
   end
 
   def stale?
@@ -56,14 +73,15 @@ class CommandRun < ApplicationRecord
   end
 
   def interrupt!
-    return unless interruptable?
+    return unless may_interrupt?
 
-    update!(
-      status: "interrupted",
-      completed_at: Time.current,
-      error: "Interrupted by user"
-    )
+    interrupt
     broadcast_update
+  end
+
+  def fail_with_error!(error)
+    @failure_error = error
+    fail!
   end
 
   # Duration calculation
@@ -88,5 +106,11 @@ class CommandRun < ApplicationRecord
     else
       "#{minutes}m #{seconds}s"
     end
+  end
+
+  private
+
+  def record_failure
+    update!(completed_at: Time.current, error: @failure_error)
   end
 end

@@ -5,10 +5,59 @@ require "rails_helper"
 RSpec.describe CommandRun do
   describe "validations" do
     it { is_expected.to validate_presence_of(:command) }
-    it { is_expected.to validate_presence_of(:status) }
     it { is_expected.to validate_inclusion_of(:command).in_array(CommandRun::COMMANDS) }
-    it { is_expected.to validate_inclusion_of(:status).in_array(CommandRun::STATUSES) }
     it { is_expected.to validate_length_of(:org_ref).is_at_most(50) }
+  end
+
+  describe "state machine" do
+    describe "initial state" do
+      it "starts in pending state" do
+        command_run = build(:command_run)
+        expect(command_run.pending?).to be true
+      end
+    end
+
+    describe "transitions" do
+      it "can transition from pending to running" do
+        command_run = create(:command_run)
+        expect(command_run.may_start?).to be true
+        command_run.start!
+        expect(command_run.running?).to be true
+        expect(command_run.started_at).to be_present
+      end
+
+      it "can transition from running to completed" do
+        command_run = create(:command_run, :running)
+        expect(command_run.may_complete?).to be true
+        command_run.complete!
+        expect(command_run.completed?).to be true
+        expect(command_run.completed_at).to be_present
+      end
+
+      it "can transition from running to failed" do
+        command_run = create(:command_run, :running)
+        command_run.fail_with_error!("Test error")
+        expect(command_run.failed?).to be true
+        expect(command_run.error).to eq("Test error")
+      end
+
+      it "can transition from pending to interrupted" do
+        command_run = create(:command_run)
+        command_run.interrupt!
+        expect(command_run.interrupted?).to be true
+      end
+
+      it "can transition from running to interrupted" do
+        command_run = create(:command_run, :running)
+        command_run.interrupt!
+        expect(command_run.interrupted?).to be true
+      end
+
+      it "cannot transition from completed to running" do
+        command_run = create(:command_run, :completed)
+        expect(command_run.may_start?).to be false
+      end
+    end
   end
 
   describe "scopes" do

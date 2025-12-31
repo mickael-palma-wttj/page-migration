@@ -27,7 +27,7 @@ module StreamingOutput
   def setup_command(command_run)
     command_run.ensure_output_directory
     command_run.output = ""
-    command_run.update!(status: "running", started_at: Time.current)
+    command_run.start!
     broadcast_update(command_run)
   end
 
@@ -56,7 +56,7 @@ module StreamingOutput
     command_run.reload
     return if command_run.interrupted?
 
-    command_run.update!(status: "completed", completed_at: Time.current)
+    command_run.complete!
   end
 
   def handle_interruption(command_run, streaming_io)
@@ -71,11 +71,7 @@ module StreamingOutput
     command_run.reload
     return if command_run.interrupted?
 
-    command_run.update!(
-      status: "failed",
-      completed_at: Time.current,
-      error: format_error(error)
-    )
+    command_run.fail_with_error!(format_error(error))
   end
 
   def format_error(error)

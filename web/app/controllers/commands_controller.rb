@@ -32,8 +32,7 @@ class CommandsController < ApplicationController
     @command_run = CommandRun.create!(
       command: command_params[:command],
       org_ref: command_params[:org_ref],
-      options: build_options,
-      status: "pending"
+      options: build_options
     )
 
     job_class = COMMAND_JOBS.fetch(@command_run.command) do
