@@ -35,6 +35,7 @@ DUST_AGENT_ID=your_agent_id
 | `migrate`  | Generate assets using Dust AI based on prompts           |
 | `analysis` | Run AI-powered page migration fit analysis               |
 | `health`   | Check environment configuration and connectivity         |
+| `stats`    | Show organization page count statistics                  |
 | `app`      | Start the web interface                                  |
 
 ### Examples
@@ -79,6 +80,12 @@ DUST_AGENT_ID=your_agent_id
 # Check environment setup
 ./bin/page_migration health
 
+# Show organization statistics
+./bin/page_migration stats
+
+# Filter stats by size category
+./bin/page_migration stats --size big
+
 # Start web UI
 ./bin/page_migration app
 
@@ -101,6 +108,7 @@ cd web && bin/rails server
 Features:
 - Organization search and selection
 - Run extract, export, migrate, analysis, tree, and health commands
+- Organization statistics with filtering, sorting, and CSV export
 - View command history and results
 - Compare migration outputs
 - Real-time streaming output
