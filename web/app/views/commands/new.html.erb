@@ -20,7 +20,7 @@
   <h1 class="text-3xl font-bold text-wttj-black">Run Command</h1>
 
   <div class="bg-white rounded-lg shadow-sm border border-wttj-gray-light p-6">
-    <%= form_with url: commands_path, method: :post, class: "space-y-6", data: { controller: "command-form" } do |f| %>
+    <%= form_with url: commands_path, method: :post, class: "space-y-6", data: { controller: "command-form", turbo: false } do |f| %>
       <!-- Command Selection -->
       <div>
         <label class="block text-sm font-medium text-wttj-black mb-3">Command</label>
