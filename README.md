@@ -13,7 +13,12 @@ bundle install
 Create a `.env` file with the following variables:
 
 ```env
-DATABASE_URL=postgres://user:password@host:port/database
+# Database connection to Welcome Kit (wk_dev)
+# Requires AWS SSO login and wttj CLI:
+#   aws sso login
+#   wttj dump load wk
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/wk_dev
+
 DUST_WORKSPACE_ID=your_workspace_id
 DUST_API_KEY=your_api_key
 DUST_AGENT_ID=your_agent_id
