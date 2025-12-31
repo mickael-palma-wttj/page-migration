@@ -28,6 +28,7 @@ module StreamingOutput
     command_run.ensure_output_directory
     command_run.output = ""
     command_run.start!
+    sleep(0.5) # Allow WebSocket subscription to establish after page load
     broadcast_update(command_run)
   end
 
@@ -80,7 +81,6 @@ module StreamingOutput
 
   def finalize_command(command_run, _streaming_io)
     command_run.reload
-    sleep(0.2) # Allow WebSocket subscription to establish
     broadcast_update(command_run)
   end
 end
