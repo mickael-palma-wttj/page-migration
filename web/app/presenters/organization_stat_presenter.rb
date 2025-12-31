@@ -24,8 +24,7 @@ class OrganizationStatPresenter
   end
 
   def truncated_name(length: 40)
-    return name if name.length <= length
-    "#{name[0..length - 4]}..."
+    name.truncate(length)
   end
 
   def formatted_published_date
