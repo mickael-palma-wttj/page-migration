@@ -11,6 +11,8 @@
 #   streaming_io.flush
 #
 class StreamingIO
+  include TerminalOutput
+
   BROADCAST_INTERVAL = 0.3
   THREAD_SHUTDOWN_TIMEOUT = 2
 
@@ -78,11 +80,16 @@ class StreamingIO
   end
 
   def tty?
-    false
+    true
   end
 
   def isatty
-    false
+    true
+  end
+
+  # Required by ruby-progressbar to determine terminal width
+  def winsize
+    [24, 120] # rows, columns
   end
 
   private
@@ -130,7 +137,8 @@ class StreamingIO
   end
 
   def render_output(output)
-    escaped = ERB::Util.html_escape(output.strip)
+    processed = self.class.process_carriage_returns(output.strip)
+    escaped = ERB::Util.html_escape(processed)
     %(<div id="output" data-auto-scroll-target="output" class="text-sm text-wttj-gray-light whitespace-pre-wrap max-h-96 overflow-y-auto">#{escaped}</div>)
   end
 end

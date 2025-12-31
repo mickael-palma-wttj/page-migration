@@ -15,8 +15,10 @@
           </h1>
           <div class="flex items-center gap-4 mt-1 text-sm text-wttj-gray-medium">
             <span>Started: <%= presenter.formatted_started_at %></span>
-            <% if presenter.formatted_duration %>
-              <span>Duration: <%= presenter.formatted_duration %></span>
+            <% if presenter.started_at %>
+              <span data-controller="duration"
+                    data-duration-started-at-value="<%= presenter.started_at.iso8601 %>"
+                    data-duration-completed-at-value="<%= presenter.completed_at&.iso8601 %>">Duration: <%= presenter.formatted_duration %></span>
             <% end %>
             <span class="capitalize font-medium <%= presenter.status_text_color %>">
               <%= presenter.display_status %>

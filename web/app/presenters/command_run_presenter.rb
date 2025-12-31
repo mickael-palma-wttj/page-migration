@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class CommandRunPresenter
+  include TerminalOutput
+
   STATUS_COLORS = {
     "completed" => "green-500",
     "failed" => "red-500",
@@ -18,10 +20,14 @@ class CommandRunPresenter
   attr_reader :command_run
 
   delegate :id, :command, :org_ref, :options, :status, :display_status,
-    :formatted_duration, :created_at, :started_at, :output, :error,
+    :formatted_duration, :created_at, :started_at, :completed_at, :error,
     :running?, :pending?, :completed?, :failed?, :interrupted?,
     :finished?, :interruptable?, :stale?,
     to: :command_run
+
+  def output
+    self.class.process_carriage_returns(command_run.output)
+  end
 
   def initialize(command_run)
     @command_run = command_run
