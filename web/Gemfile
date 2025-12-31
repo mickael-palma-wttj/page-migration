@@ -83,3 +83,4 @@ gem "pg"                 # PostgreSQL for PageMigration database access
 gem "dotenv"             # Load .env manually (not dotenv-rails to avoid DATABASE_URL conflict)
 gem "rouge"              # Syntax highlighting for JSON/Markdown viewer
 gem "redcarpet"          # Markdown to HTML renderer
+gem "rubyzip"            # ZIP file generation for downloads

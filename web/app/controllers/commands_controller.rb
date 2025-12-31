@@ -14,7 +14,7 @@ class CommandsController < ApplicationController
 
   COMMANDS_REQUIRING_ORG = %w[extract export migrate analysis tree].freeze
 
-  before_action :set_command_run, only: [:show, :destroy, :interrupt]
+  before_action :set_command_run, only: [:show, :destroy, :interrupt, :download]
   before_action :validate_org_ref, only: [:create]
 
   def index
@@ -59,6 +59,18 @@ class CommandsController < ApplicationController
     else
       redirect_to command_path(@command_run), alert: "Command is not running"
     end
+  end
+
+  def download
+    unless @command_run.output_directory.exist?
+      redirect_to command_path(@command_run), alert: "No output files available"
+      return
+    end
+
+    zip_data = ZipService.create_from_directory(@command_run.output_directory)
+    filename = "#{@command_run.command}_#{@command_run.org_ref || @command_run.id}_#{@command_run.created_at.strftime("%Y%m%d_%H%M%S")}.zip"
+
+    send_data zip_data, filename: filename, type: "application/zip", disposition: "attachment"
   end
 
   private

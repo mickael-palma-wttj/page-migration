@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   resources :commands, only: [:index, :new, :create, :show, :destroy] do
     member do
       post :interrupt
+      get :download
     end
   end
 

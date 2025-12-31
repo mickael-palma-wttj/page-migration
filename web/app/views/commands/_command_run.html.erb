@@ -37,17 +37,23 @@
               data: { turbo_confirm: "Interrupt this command?" },
               class: "text-sm px-3 py-1 rounded border border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-colors" %>
         <% end %>
-        <% if presenter.finished? && presenter.org_ref.present? %>
-          <% export_id = find_export_id_for_org(presenter.org_ref, command_run: command_run) %>
-          <% if export_id %>
-            <%= link_to "View Export", export_path(export_id),
-                class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
-          <% else %>
-            <%= link_to "View Exports", exports_path,
-                class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+        <% if presenter.finished? %>
+          <% if presenter.org_ref.present? %>
+            <% export_id = find_export_id_for_org(presenter.org_ref, command_run: command_run) %>
+            <% if export_id %>
+              <%= link_to "View Export", export_path(export_id),
+                  class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+            <% else %>
+              <%= link_to "View Exports", exports_path,
+                  class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+            <% end %>
           <% end %>
-          <%= link_to "Run Again", new_command_path(org_ref: presenter.org_ref, command: presenter.command),
-              class: "text-sm bg-wttj-yellow hover:bg-yellow-400 text-wttj-black px-3 py-1 rounded transition-colors" %>
+          <%= link_to "Download ZIP", download_command_path(command_run),
+              class: "text-sm px-3 py-1 rounded border border-wttj-gray-light hover:border-wttj-yellow transition-colors" %>
+          <% if presenter.org_ref.present? %>
+            <%= link_to "Run Again", new_command_path(org_ref: presenter.org_ref, command: presenter.command),
+                class: "text-sm bg-wttj-yellow hover:bg-yellow-400 text-wttj-black px-3 py-1 rounded transition-colors" %>
+          <% end %>
         <% end %>
         <% if presenter.finished? %>
           <%= button_to "Delete", command_path(presenter),
