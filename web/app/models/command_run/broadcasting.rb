@@ -5,14 +5,19 @@ class CommandRun
     extend ActiveSupport::Concern
 
     def broadcast_update
+      stream_name = "command_run_#{id}"
+      target_id = "command_run_#{id}"
+
       html = ApplicationController.render(
         partial: "commands/command_run",
         locals: {command_run: self}
       )
 
+      Rails.logger.info "[Broadcast] Sending update to stream: #{stream_name}, target: #{target_id}"
+
       Turbo::StreamsChannel.broadcast_update_to(
-        "command_run_#{id}",
-        target: "command_run_#{id}",
+        stream_name,
+        target: target_id,
         html: html
       )
     end
